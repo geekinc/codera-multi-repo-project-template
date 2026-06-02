@@ -22,7 +22,8 @@
       "label": "NPM Scope",
       "description": "npm package scope for shared-types (e.g., @myproject)",
       "required": true,
-      "default": "@{{PROJECT_NAME}}"
+      "default": "@{{PROJECT_NAME}}",
+      "validation": "^@[a-z][a-z0-9-]{1,20}$"
     },
     {
       "key": "NODE_VERSION",
