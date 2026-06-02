@@ -1,4 +1,0 @@
-{
-  "apiBaseUrl": "https://replace-me.execute-api.us-east-1.amazonaws.com/prod",
-  "pollIntervalMs": 5000
-}
