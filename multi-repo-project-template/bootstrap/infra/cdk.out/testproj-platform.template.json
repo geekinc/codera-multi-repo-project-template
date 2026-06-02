@@ -1,0 +1,2861 @@
+{
+ "Description": "Repos, CodeArtifact, and CodeBuild for testproj",
+ "Resources": {
+  "CaDomain": {
+   "Type": "AWS::CodeArtifact::Domain",
+   "Properties": {
+    "DomainName": "testproj"
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/CaDomain"
+   }
+  },
+  "CaPublicUpstream": {
+   "Type": "AWS::CodeArtifact::Repository",
+   "Properties": {
+    "DomainName": "testproj",
+    "ExternalConnections": [
+     "public:npmjs"
+    ],
+    "RepositoryName": "npm-store"
+   },
+   "DependsOn": [
+    "CaDomain"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/CaPublicUpstream"
+   }
+  },
+  "CaRepo": {
+   "Type": "AWS::CodeArtifact::Repository",
+   "Properties": {
+    "DomainName": "testproj",
+    "RepositoryName": "shared",
+    "Upstreams": [
+     "npm-store"
+    ]
+   },
+   "DependsOn": [
+    "CaPublicUpstream"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/CaRepo"
+   }
+  },
+  "DashboardAuthFn40691AD3": {
+   "Type": "AWS::CloudFront::Function",
+   "Properties": {
+    "AutoPublish": true,
+    "FunctionCode": "\nfunction handler(event) {\n  var request = event.request;\n  var uri = request.uri;\n\n  // Allow static assets through — only gate document requests\n  if (uri.match(/\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|eot|map|json)$/)) {\n    return request;\n  }\n\n  var headers = request.headers;\n  var querystring = request.querystring;\n  var expectedKey = 'changeme-testproj-2026';\n\n  var headerKey = headers['x-auth-key'] ? headers['x-auth-key'].value : '';\n  var queryKey = querystring['key'] ? querystring['key'].value : '';\n\n  if (headerKey === expectedKey || queryKey === expectedKey) {\n    return request;\n  }\n\n  return {\n    statusCode: 401,\n    statusDescription: 'Unauthorized',\n    headers: { 'content-type': { value: 'text/html' } },\n    body: '<!doctype html><html><head><title>Not Authorized</title></head><body style=\"font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f8fafc\"><div style=\"text-align:center\"><h1 style=\"color:#64748b;font-size:2rem\">Not Authorized</h1><p style=\"color:#94a3b8\">A valid key is required to access this dashboard.</p></div></body></html>',\n  };\n}\n        ",
+    "FunctionConfig": {
+     "Comment": "testproj-dashboard-auth",
+     "Runtime": "cloudfront-js-1.0"
+    },
+    "Name": "testproj-dashboard-auth"
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/DashboardAuthFn/Resource"
+   }
+  },
+  "SiteBucketfrontend2FA034D5": {
+   "Type": "AWS::S3::Bucket",
+   "Properties": {
+    "BucketName": "testproj-frontend-508564775785",
+    "PublicAccessBlockConfiguration": {
+     "BlockPublicAcls": true,
+     "BlockPublicPolicy": true,
+     "IgnorePublicAcls": true,
+     "RestrictPublicBuckets": true
+    },
+    "Tags": [
+     {
+      "Key": "aws-cdk:auto-delete-objects",
+      "Value": "true"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/SiteBucket-frontend/Resource"
+   }
+  },
+  "SiteBucketfrontendPolicyCF28289C": {
+   "Type": "AWS::S3::BucketPolicy",
+   "Properties": {
+    "Bucket": {
+     "Ref": "SiteBucketfrontend2FA034D5"
+    },
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:PutBucketPolicy",
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:DeleteObject*"
+       ],
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": {
+         "Fn::GetAtt": [
+          "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+          "Arn"
+         ]
+        }
+       },
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "SiteBucketfrontend2FA034D5",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "SiteBucketfrontend2FA034D5",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "s3:GetObject",
+       "Condition": {
+        "StringEquals": {
+         "AWS:SourceArn": {
+          "Fn::Join": [
+           "",
+           [
+            "arn:",
+            {
+             "Ref": "AWS::Partition"
+            },
+            ":cloudfront::",
+            {
+             "Ref": "AWS::AccountId"
+            },
+            ":distribution/",
+            {
+             "Ref": "Cdnfrontend3287681E"
+            }
+           ]
+          ]
+         }
+        }
+       },
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "cloudfront.amazonaws.com"
+       },
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          {
+           "Fn::GetAtt": [
+            "SiteBucketfrontend2FA034D5",
+            "Arn"
+           ]
+          },
+          "/*"
+         ]
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/SiteBucket-frontend/Policy/Resource"
+   }
+  },
+  "SiteBucketfrontendAutoDeleteObjectsCustomResourceC38271B8": {
+   "Type": "Custom::S3AutoDeleteObjects",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+      "Arn"
+     ]
+    },
+    "BucketName": {
+     "Ref": "SiteBucketfrontend2FA034D5"
+    }
+   },
+   "DependsOn": [
+    "SiteBucketfrontendPolicyCF28289C"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/SiteBucket-frontend/AutoDeleteObjectsCustomResource/Default"
+   }
+  },
+  "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ]
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role"
+   }
+  },
+  "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-508564775785-us-east-1",
+     "S3Key": "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6.zip"
+    },
+    "Timeout": 900,
+    "MemorySize": 128,
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs22.x",
+    "Description": {
+     "Fn::Join": [
+      "",
+      [
+       "Lambda function for auto-deleting objects in ",
+       {
+        "Ref": "SiteBucketfrontend2FA034D5"
+       },
+       " S3 bucket."
+      ]
+     ]
+    }
+   },
+   "DependsOn": [
+    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler",
+    "aws:asset:path": "asset.faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6",
+    "aws:asset:property": "Code"
+   }
+  },
+  "CdnfrontendOrigin1S3OriginAccessControlB334564A": {
+   "Type": "AWS::CloudFront::OriginAccessControl",
+   "Properties": {
+    "OriginAccessControlConfig": {
+     "Name": "testprojplatformCdnfrontendOrigin1S3OriginAccessControl68A0CDFC",
+     "OriginAccessControlOriginType": "s3",
+     "SigningBehavior": "always",
+     "SigningProtocol": "sigv4"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Cdn-frontend/Origin1/S3OriginAccessControl/Resource"
+   }
+  },
+  "Cdnfrontend3287681E": {
+   "Type": "AWS::CloudFront::Distribution",
+   "Properties": {
+    "DistributionConfig": {
+     "Comment": "testproj frontend",
+     "CustomErrorResponses": [
+      {
+       "ErrorCode": 403,
+       "ResponseCode": 200,
+       "ResponsePagePath": "/index.html"
+      },
+      {
+       "ErrorCode": 404,
+       "ResponseCode": 200,
+       "ResponsePagePath": "/index.html"
+      }
+     ],
+     "DefaultCacheBehavior": {
+      "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+      "Compress": true,
+      "TargetOriginId": "testprojplatformCdnfrontendOrigin19ECF3886",
+      "ViewerProtocolPolicy": "redirect-to-https"
+     },
+     "DefaultRootObject": "index.html",
+     "Enabled": true,
+     "HttpVersion": "http2",
+     "IPV6Enabled": true,
+     "Origins": [
+      {
+       "DomainName": {
+        "Fn::GetAtt": [
+         "SiteBucketfrontend2FA034D5",
+         "RegionalDomainName"
+        ]
+       },
+       "Id": "testprojplatformCdnfrontendOrigin19ECF3886",
+       "OriginAccessControlId": {
+        "Fn::GetAtt": [
+         "CdnfrontendOrigin1S3OriginAccessControlB334564A",
+         "Id"
+        ]
+       },
+       "S3OriginConfig": {
+        "OriginAccessIdentity": ""
+       }
+      }
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Cdn-frontend/Resource"
+   }
+  },
+  "SiteBucketdashboard6E5A8F03": {
+   "Type": "AWS::S3::Bucket",
+   "Properties": {
+    "BucketName": "testproj-dashboard-508564775785",
+    "PublicAccessBlockConfiguration": {
+     "BlockPublicAcls": true,
+     "BlockPublicPolicy": true,
+     "IgnorePublicAcls": true,
+     "RestrictPublicBuckets": true
+    },
+    "Tags": [
+     {
+      "Key": "aws-cdk:auto-delete-objects",
+      "Value": "true"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/SiteBucket-dashboard/Resource"
+   }
+  },
+  "SiteBucketdashboardPolicy87FDA68D": {
+   "Type": "AWS::S3::BucketPolicy",
+   "Properties": {
+    "Bucket": {
+     "Ref": "SiteBucketdashboard6E5A8F03"
+    },
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:PutBucketPolicy",
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:DeleteObject*"
+       ],
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": {
+         "Fn::GetAtt": [
+          "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+          "Arn"
+         ]
+        }
+       },
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "SiteBucketdashboard6E5A8F03",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "SiteBucketdashboard6E5A8F03",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "s3:GetObject",
+       "Condition": {
+        "StringEquals": {
+         "AWS:SourceArn": {
+          "Fn::Join": [
+           "",
+           [
+            "arn:",
+            {
+             "Ref": "AWS::Partition"
+            },
+            ":cloudfront::",
+            {
+             "Ref": "AWS::AccountId"
+            },
+            ":distribution/",
+            {
+             "Ref": "Cdndashboard40992F58"
+            }
+           ]
+          ]
+         }
+        }
+       },
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "cloudfront.amazonaws.com"
+       },
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          {
+           "Fn::GetAtt": [
+            "SiteBucketdashboard6E5A8F03",
+            "Arn"
+           ]
+          },
+          "/*"
+         ]
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/SiteBucket-dashboard/Policy/Resource"
+   }
+  },
+  "SiteBucketdashboardAutoDeleteObjectsCustomResource671805B7": {
+   "Type": "Custom::S3AutoDeleteObjects",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+      "Arn"
+     ]
+    },
+    "BucketName": {
+     "Ref": "SiteBucketdashboard6E5A8F03"
+    }
+   },
+   "DependsOn": [
+    "SiteBucketdashboardPolicy87FDA68D"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/SiteBucket-dashboard/AutoDeleteObjectsCustomResource/Default"
+   }
+  },
+  "CdndashboardOrigin1S3OriginAccessControlB092A093": {
+   "Type": "AWS::CloudFront::OriginAccessControl",
+   "Properties": {
+    "OriginAccessControlConfig": {
+     "Name": "testprojplatformCdndashboardOrigin1S3OriginAccessControlA19D041B",
+     "OriginAccessControlOriginType": "s3",
+     "SigningBehavior": "always",
+     "SigningProtocol": "sigv4"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Cdn-dashboard/Origin1/S3OriginAccessControl/Resource"
+   }
+  },
+  "Cdndashboard40992F58": {
+   "Type": "AWS::CloudFront::Distribution",
+   "Properties": {
+    "DistributionConfig": {
+     "Comment": "testproj dashboard",
+     "CustomErrorResponses": [
+      {
+       "ErrorCode": 403,
+       "ResponseCode": 200,
+       "ResponsePagePath": "/index.html"
+      },
+      {
+       "ErrorCode": 404,
+       "ResponseCode": 200,
+       "ResponsePagePath": "/index.html"
+      }
+     ],
+     "DefaultCacheBehavior": {
+      "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+      "Compress": true,
+      "FunctionAssociations": [
+       {
+        "EventType": "viewer-request",
+        "FunctionARN": {
+         "Fn::GetAtt": [
+          "DashboardAuthFn40691AD3",
+          "FunctionARN"
+         ]
+        }
+       }
+      ],
+      "TargetOriginId": "testprojplatformCdndashboardOrigin177FAE88F",
+      "ViewerProtocolPolicy": "redirect-to-https"
+     },
+     "DefaultRootObject": "index.html",
+     "Enabled": true,
+     "HttpVersion": "http2",
+     "IPV6Enabled": true,
+     "Origins": [
+      {
+       "DomainName": {
+        "Fn::GetAtt": [
+         "SiteBucketdashboard6E5A8F03",
+         "RegionalDomainName"
+        ]
+       },
+       "Id": "testprojplatformCdndashboardOrigin177FAE88F",
+       "OriginAccessControlId": {
+        "Fn::GetAtt": [
+         "CdndashboardOrigin1S3OriginAccessControlB092A093",
+         "Id"
+        ]
+       },
+       "S3OriginConfig": {
+        "OriginAccessIdentity": ""
+       }
+      }
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Cdn-dashboard/Resource"
+   }
+  },
+  "RepoorchestratorC6BE8FF2": {
+   "Type": "AWS::CodeCommit::Repository",
+   "Properties": {
+    "RepositoryDescription": "testproj :: orchestrator",
+    "RepositoryName": "testproj-orchestrator"
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Repo-orchestrator/Resource"
+   }
+  },
+  "BuildorchestratorRole78FA409E": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "codebuild.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-orchestrator/Role/Resource"
+   }
+  },
+  "BuildorchestratorRoleDefaultPolicyDF556714": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "codecommit:GitPull",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "RepoorchestratorC6BE8FF2",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":logs:us-east-1:508564775785:log-group:/aws/codebuild/",
+           {
+            "Ref": "Buildorchestrator72DABFC6"
+           }
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":logs:us-east-1:508564775785:log-group:/aws/codebuild/",
+           {
+            "Ref": "Buildorchestrator72DABFC6"
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "codebuild:CreateReportGroup",
+        "codebuild:CreateReport",
+        "codebuild:UpdateReport",
+        "codebuild:BatchPutTestCases",
+        "codebuild:BatchPutCodeCoverages"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":codebuild:us-east-1:508564775785:report-group/",
+          {
+           "Ref": "Buildorchestrator72DABFC6"
+          },
+          "-*"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "codeartifact:GetAuthorizationToken",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":codeartifact:us-east-1:508564775785:domain/testproj"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "sts:GetServiceBearerToken",
+       "Condition": {
+        "StringEquals": {
+         "sts:AWSServiceName": "codeartifact.amazonaws.com"
+        }
+       },
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "codeartifact:ReadFromRepository",
+        "codeartifact:GetRepositoryEndpoint",
+        "codeartifact:GetPackageVersionAsset",
+        "codeartifact:DescribePackageVersion",
+        "codeartifact:ListPackageVersions"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":codeartifact:us-east-1:508564775785:repository/testproj/shared"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":codeartifact:us-east-1:508564775785:repository/testproj/shared/*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":codeartifact:us-east-1:508564775785:package/testproj/shared/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "BuildorchestratorRoleDefaultPolicyDF556714",
+    "Roles": [
+     {
+      "Ref": "BuildorchestratorRole78FA409E"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-orchestrator/Role/DefaultPolicy/Resource"
+   }
+  },
+  "Buildorchestrator72DABFC6": {
+   "Type": "AWS::CodeBuild::Project",
+   "Properties": {
+    "Artifacts": {
+     "Type": "NO_ARTIFACTS"
+    },
+    "Cache": {
+     "Type": "NO_CACHE"
+    },
+    "EncryptionKey": "alias/aws/s3",
+    "Environment": {
+     "ComputeType": "BUILD_GENERAL1_SMALL",
+     "EnvironmentVariables": [
+      {
+       "Name": "PROJECT_NAME",
+       "Type": "PLAINTEXT",
+       "Value": "testproj"
+      },
+      {
+       "Name": "AWS_ACCOUNT_ID",
+       "Type": "PLAINTEXT",
+       "Value": "508564775785"
+      },
+      {
+       "Name": "CA_DOMAIN",
+       "Type": "PLAINTEXT",
+       "Value": "testproj"
+      },
+      {
+       "Name": "CA_REPO",
+       "Type": "PLAINTEXT",
+       "Value": "shared"
+      },
+      {
+       "Name": "CA_DOMAIN_OWNER",
+       "Type": "PLAINTEXT",
+       "Value": "508564775785"
+      },
+      {
+       "Name": "NODE_VERSION",
+       "Type": "PLAINTEXT",
+       "Value": "20"
+      }
+     ],
+     "Image": "aws/codebuild/standard:7.0",
+     "ImagePullCredentialsType": "CODEBUILD",
+     "PrivilegedMode": false,
+     "Type": "LINUX_CONTAINER"
+    },
+    "Name": "testproj-orchestrator",
+    "ServiceRole": {
+     "Fn::GetAtt": [
+      "BuildorchestratorRole78FA409E",
+      "Arn"
+     ]
+    },
+    "Source": {
+     "BuildSpec": "buildspec.yml",
+     "Location": {
+      "Fn::GetAtt": [
+       "RepoorchestratorC6BE8FF2",
+       "CloneUrlHttp"
+      ]
+     },
+     "Type": "CODECOMMIT"
+    },
+    "SourceVersion": "main"
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-orchestrator/Resource"
+   }
+  },
+  "Reposharedtypes2261275B": {
+   "Type": "AWS::CodeCommit::Repository",
+   "Properties": {
+    "RepositoryDescription": "testproj :: shared-types",
+    "RepositoryName": "testproj-shared-types"
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Repo-shared-types/Resource"
+   }
+  },
+  "BuildsharedtypesRole500ECB8E": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "codebuild.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-shared-types/Role/Resource"
+   }
+  },
+  "BuildsharedtypesRoleDefaultPolicy20376BAC": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "codecommit:GitPull",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "Reposharedtypes2261275B",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":logs:us-east-1:508564775785:log-group:/aws/codebuild/",
+           {
+            "Ref": "Buildsharedtypes7A660711"
+           }
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":logs:us-east-1:508564775785:log-group:/aws/codebuild/",
+           {
+            "Ref": "Buildsharedtypes7A660711"
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "codebuild:CreateReportGroup",
+        "codebuild:CreateReport",
+        "codebuild:UpdateReport",
+        "codebuild:BatchPutTestCases",
+        "codebuild:BatchPutCodeCoverages"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":codebuild:us-east-1:508564775785:report-group/",
+          {
+           "Ref": "Buildsharedtypes7A660711"
+          },
+          "-*"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "codeartifact:GetAuthorizationToken",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":codeartifact:us-east-1:508564775785:domain/testproj"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "sts:GetServiceBearerToken",
+       "Condition": {
+        "StringEquals": {
+         "sts:AWSServiceName": "codeartifact.amazonaws.com"
+        }
+       },
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "codeartifact:ReadFromRepository",
+        "codeartifact:GetRepositoryEndpoint",
+        "codeartifact:GetPackageVersionAsset",
+        "codeartifact:DescribePackageVersion",
+        "codeartifact:ListPackageVersions"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":codeartifact:us-east-1:508564775785:repository/testproj/shared"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":codeartifact:us-east-1:508564775785:repository/testproj/shared/*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":codeartifact:us-east-1:508564775785:package/testproj/shared/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "codeartifact:PublishPackageVersion",
+        "codeartifact:PutPackageMetadata"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":codeartifact:us-east-1:508564775785:package/testproj/shared/*"
+         ]
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "BuildsharedtypesRoleDefaultPolicy20376BAC",
+    "Roles": [
+     {
+      "Ref": "BuildsharedtypesRole500ECB8E"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-shared-types/Role/DefaultPolicy/Resource"
+   }
+  },
+  "Buildsharedtypes7A660711": {
+   "Type": "AWS::CodeBuild::Project",
+   "Properties": {
+    "Artifacts": {
+     "Type": "NO_ARTIFACTS"
+    },
+    "Cache": {
+     "Type": "NO_CACHE"
+    },
+    "EncryptionKey": "alias/aws/s3",
+    "Environment": {
+     "ComputeType": "BUILD_GENERAL1_SMALL",
+     "EnvironmentVariables": [
+      {
+       "Name": "PROJECT_NAME",
+       "Type": "PLAINTEXT",
+       "Value": "testproj"
+      },
+      {
+       "Name": "AWS_ACCOUNT_ID",
+       "Type": "PLAINTEXT",
+       "Value": "508564775785"
+      },
+      {
+       "Name": "CA_DOMAIN",
+       "Type": "PLAINTEXT",
+       "Value": "testproj"
+      },
+      {
+       "Name": "CA_REPO",
+       "Type": "PLAINTEXT",
+       "Value": "shared"
+      },
+      {
+       "Name": "CA_DOMAIN_OWNER",
+       "Type": "PLAINTEXT",
+       "Value": "508564775785"
+      },
+      {
+       "Name": "NODE_VERSION",
+       "Type": "PLAINTEXT",
+       "Value": "20"
+      }
+     ],
+     "Image": "aws/codebuild/standard:7.0",
+     "ImagePullCredentialsType": "CODEBUILD",
+     "PrivilegedMode": false,
+     "Type": "LINUX_CONTAINER"
+    },
+    "Name": "testproj-shared-types",
+    "ServiceRole": {
+     "Fn::GetAtt": [
+      "BuildsharedtypesRole500ECB8E",
+      "Arn"
+     ]
+    },
+    "Source": {
+     "BuildSpec": "buildspec.yml",
+     "Location": {
+      "Fn::GetAtt": [
+       "Reposharedtypes2261275B",
+       "CloneUrlHttp"
+      ]
+     },
+     "Type": "CODECOMMIT"
+    },
+    "SourceVersion": "main"
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-shared-types/Resource"
+   }
+  },
+  "Repofrontend3A01BFBD": {
+   "Type": "AWS::CodeCommit::Repository",
+   "Properties": {
+    "RepositoryDescription": "testproj :: frontend",
+    "RepositoryName": "testproj-frontend"
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Repo-frontend/Resource"
+   }
+  },
+  "BuildfrontendRole0B7EBE4C": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "codebuild.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-frontend/Role/Resource"
+   }
+  },
+  "BuildfrontendRoleDefaultPolicy65C46914": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "codecommit:GitPull",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "Repofrontend3A01BFBD",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":logs:us-east-1:508564775785:log-group:/aws/codebuild/",
+           {
+            "Ref": "Buildfrontend87ACCBA3"
+           }
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":logs:us-east-1:508564775785:log-group:/aws/codebuild/",
+           {
+            "Ref": "Buildfrontend87ACCBA3"
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "codebuild:CreateReportGroup",
+        "codebuild:CreateReport",
+        "codebuild:UpdateReport",
+        "codebuild:BatchPutTestCases",
+        "codebuild:BatchPutCodeCoverages"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":codebuild:us-east-1:508564775785:report-group/",
+          {
+           "Ref": "Buildfrontend87ACCBA3"
+          },
+          "-*"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "codeartifact:GetAuthorizationToken",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":codeartifact:us-east-1:508564775785:domain/testproj"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "sts:GetServiceBearerToken",
+       "Condition": {
+        "StringEquals": {
+         "sts:AWSServiceName": "codeartifact.amazonaws.com"
+        }
+       },
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "codeartifact:ReadFromRepository",
+        "codeartifact:GetRepositoryEndpoint",
+        "codeartifact:GetPackageVersionAsset",
+        "codeartifact:DescribePackageVersion",
+        "codeartifact:ListPackageVersions"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":codeartifact:us-east-1:508564775785:repository/testproj/shared"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":codeartifact:us-east-1:508564775785:repository/testproj/shared/*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":codeartifact:us-east-1:508564775785:package/testproj/shared/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "s3:GetObject*",
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:DeleteObject*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging",
+        "s3:Abort*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "SiteBucketfrontend2FA034D5",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "SiteBucketfrontend2FA034D5",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "cloudfront:CreateInvalidation",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:aws:cloudfront::508564775785:distribution/",
+          {
+           "Ref": "Cdnfrontend3287681E"
+          }
+         ]
+        ]
+       }
+      },
+      {
+       "Action": [
+        "ssm:GetParameters",
+        "ssm:GetParameter"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":ssm:us-east-1:508564775785:parameter/testproj/*"
+         ]
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "BuildfrontendRoleDefaultPolicy65C46914",
+    "Roles": [
+     {
+      "Ref": "BuildfrontendRole0B7EBE4C"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-frontend/Role/DefaultPolicy/Resource"
+   }
+  },
+  "Buildfrontend87ACCBA3": {
+   "Type": "AWS::CodeBuild::Project",
+   "Properties": {
+    "Artifacts": {
+     "Type": "NO_ARTIFACTS"
+    },
+    "Cache": {
+     "Type": "NO_CACHE"
+    },
+    "EncryptionKey": "alias/aws/s3",
+    "Environment": {
+     "ComputeType": "BUILD_GENERAL1_SMALL",
+     "EnvironmentVariables": [
+      {
+       "Name": "PROJECT_NAME",
+       "Type": "PLAINTEXT",
+       "Value": "testproj"
+      },
+      {
+       "Name": "AWS_ACCOUNT_ID",
+       "Type": "PLAINTEXT",
+       "Value": "508564775785"
+      },
+      {
+       "Name": "CA_DOMAIN",
+       "Type": "PLAINTEXT",
+       "Value": "testproj"
+      },
+      {
+       "Name": "CA_REPO",
+       "Type": "PLAINTEXT",
+       "Value": "shared"
+      },
+      {
+       "Name": "CA_DOMAIN_OWNER",
+       "Type": "PLAINTEXT",
+       "Value": "508564775785"
+      },
+      {
+       "Name": "NODE_VERSION",
+       "Type": "PLAINTEXT",
+       "Value": "20"
+      },
+      {
+       "Name": "DEPLOY_BUCKET",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Ref": "SiteBucketfrontend2FA034D5"
+       }
+      },
+      {
+       "Name": "CLOUDFRONT_DISTRIBUTION_ID",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Ref": "Cdnfrontend3287681E"
+       }
+      }
+     ],
+     "Image": "aws/codebuild/standard:7.0",
+     "ImagePullCredentialsType": "CODEBUILD",
+     "PrivilegedMode": false,
+     "Type": "LINUX_CONTAINER"
+    },
+    "Name": "testproj-frontend",
+    "ServiceRole": {
+     "Fn::GetAtt": [
+      "BuildfrontendRole0B7EBE4C",
+      "Arn"
+     ]
+    },
+    "Source": {
+     "BuildSpec": "buildspec.yml",
+     "Location": {
+      "Fn::GetAtt": [
+       "Repofrontend3A01BFBD",
+       "CloneUrlHttp"
+      ]
+     },
+     "Type": "CODECOMMIT"
+    },
+    "SourceVersion": "main"
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-frontend/Resource"
+   }
+  },
+  "BuildfrontendEventsRole485F9FA2": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "events.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-frontend/EventsRole/Resource"
+   }
+  },
+  "BuildfrontendEventsRoleDefaultPolicy35498529": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "codebuild:StartBuild",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "Buildfrontend87ACCBA3",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "BuildfrontendEventsRoleDefaultPolicy35498529",
+    "Roles": [
+     {
+      "Ref": "BuildfrontendEventsRole485F9FA2"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-frontend/EventsRole/DefaultPolicy/Resource"
+   }
+  },
+  "RepobackendE412FC85": {
+   "Type": "AWS::CodeCommit::Repository",
+   "Properties": {
+    "RepositoryDescription": "testproj :: backend",
+    "RepositoryName": "testproj-backend"
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Repo-backend/Resource"
+   }
+  },
+  "BuildbackendRoleF72C2984": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "codebuild.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-backend/Role/Resource"
+   }
+  },
+  "BuildbackendRoleDefaultPolicy6D888F17": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "codecommit:GitPull",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "RepobackendE412FC85",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":logs:us-east-1:508564775785:log-group:/aws/codebuild/",
+           {
+            "Ref": "Buildbackend9FD203CF"
+           }
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":logs:us-east-1:508564775785:log-group:/aws/codebuild/",
+           {
+            "Ref": "Buildbackend9FD203CF"
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "codebuild:CreateReportGroup",
+        "codebuild:CreateReport",
+        "codebuild:UpdateReport",
+        "codebuild:BatchPutTestCases",
+        "codebuild:BatchPutCodeCoverages"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":codebuild:us-east-1:508564775785:report-group/",
+          {
+           "Ref": "Buildbackend9FD203CF"
+          },
+          "-*"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "codeartifact:GetAuthorizationToken",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":codeartifact:us-east-1:508564775785:domain/testproj"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "sts:GetServiceBearerToken",
+       "Condition": {
+        "StringEquals": {
+         "sts:AWSServiceName": "codeartifact.amazonaws.com"
+        }
+       },
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "codeartifact:ReadFromRepository",
+        "codeartifact:GetRepositoryEndpoint",
+        "codeartifact:GetPackageVersionAsset",
+        "codeartifact:DescribePackageVersion",
+        "codeartifact:ListPackageVersions"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":codeartifact:us-east-1:508564775785:repository/testproj/shared"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":codeartifact:us-east-1:508564775785:repository/testproj/shared/*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":codeartifact:us-east-1:508564775785:package/testproj/shared/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "cloudformation:*",
+        "s3:*",
+        "lambda:*",
+        "apigateway:*",
+        "sqs:*",
+        "dynamodb:*",
+        "iam:PassRole",
+        "ssm:GetParameter*"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "BuildbackendRoleDefaultPolicy6D888F17",
+    "Roles": [
+     {
+      "Ref": "BuildbackendRoleF72C2984"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-backend/Role/DefaultPolicy/Resource"
+   }
+  },
+  "Buildbackend9FD203CF": {
+   "Type": "AWS::CodeBuild::Project",
+   "Properties": {
+    "Artifacts": {
+     "Type": "NO_ARTIFACTS"
+    },
+    "Cache": {
+     "Type": "NO_CACHE"
+    },
+    "EncryptionKey": "alias/aws/s3",
+    "Environment": {
+     "ComputeType": "BUILD_GENERAL1_SMALL",
+     "EnvironmentVariables": [
+      {
+       "Name": "PROJECT_NAME",
+       "Type": "PLAINTEXT",
+       "Value": "testproj"
+      },
+      {
+       "Name": "AWS_ACCOUNT_ID",
+       "Type": "PLAINTEXT",
+       "Value": "508564775785"
+      },
+      {
+       "Name": "CA_DOMAIN",
+       "Type": "PLAINTEXT",
+       "Value": "testproj"
+      },
+      {
+       "Name": "CA_REPO",
+       "Type": "PLAINTEXT",
+       "Value": "shared"
+      },
+      {
+       "Name": "CA_DOMAIN_OWNER",
+       "Type": "PLAINTEXT",
+       "Value": "508564775785"
+      },
+      {
+       "Name": "NODE_VERSION",
+       "Type": "PLAINTEXT",
+       "Value": "20"
+      }
+     ],
+     "Image": "aws/codebuild/standard:7.0",
+     "ImagePullCredentialsType": "CODEBUILD",
+     "PrivilegedMode": false,
+     "Type": "LINUX_CONTAINER"
+    },
+    "Name": "testproj-backend",
+    "ServiceRole": {
+     "Fn::GetAtt": [
+      "BuildbackendRoleF72C2984",
+      "Arn"
+     ]
+    },
+    "Source": {
+     "BuildSpec": "buildspec.yml",
+     "Location": {
+      "Fn::GetAtt": [
+       "RepobackendE412FC85",
+       "CloneUrlHttp"
+      ]
+     },
+     "Type": "CODECOMMIT"
+    },
+    "SourceVersion": "main"
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-backend/Resource"
+   }
+  },
+  "BuildbackendEventsRole9180FA7E": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "events.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-backend/EventsRole/Resource"
+   }
+  },
+  "BuildbackendEventsRoleDefaultPolicy063C2646": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "codebuild:StartBuild",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "Buildbackend9FD203CF",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "BuildbackendEventsRoleDefaultPolicy063C2646",
+    "Roles": [
+     {
+      "Ref": "BuildbackendEventsRole9180FA7E"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-backend/EventsRole/DefaultPolicy/Resource"
+   }
+  },
+  "Repoagent131EDFD7": {
+   "Type": "AWS::CodeCommit::Repository",
+   "Properties": {
+    "RepositoryDescription": "testproj :: agent",
+    "RepositoryName": "testproj-agent"
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Repo-agent/Resource"
+   }
+  },
+  "BuildagentRole3C8BC1B5": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "codebuild.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-agent/Role/Resource"
+   }
+  },
+  "BuildagentRoleDefaultPolicy81B22DBF": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "codecommit:GitPull",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "Repoagent131EDFD7",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":logs:us-east-1:508564775785:log-group:/aws/codebuild/",
+           {
+            "Ref": "Buildagent8833B977"
+           }
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":logs:us-east-1:508564775785:log-group:/aws/codebuild/",
+           {
+            "Ref": "Buildagent8833B977"
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "codebuild:CreateReportGroup",
+        "codebuild:CreateReport",
+        "codebuild:UpdateReport",
+        "codebuild:BatchPutTestCases",
+        "codebuild:BatchPutCodeCoverages"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":codebuild:us-east-1:508564775785:report-group/",
+          {
+           "Ref": "Buildagent8833B977"
+          },
+          "-*"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "codeartifact:GetAuthorizationToken",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":codeartifact:us-east-1:508564775785:domain/testproj"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "sts:GetServiceBearerToken",
+       "Condition": {
+        "StringEquals": {
+         "sts:AWSServiceName": "codeartifact.amazonaws.com"
+        }
+       },
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "codeartifact:ReadFromRepository",
+        "codeartifact:GetRepositoryEndpoint",
+        "codeartifact:GetPackageVersionAsset",
+        "codeartifact:DescribePackageVersion",
+        "codeartifact:ListPackageVersions"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":codeartifact:us-east-1:508564775785:repository/testproj/shared"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":codeartifact:us-east-1:508564775785:repository/testproj/shared/*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":codeartifact:us-east-1:508564775785:package/testproj/shared/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "BuildagentRoleDefaultPolicy81B22DBF",
+    "Roles": [
+     {
+      "Ref": "BuildagentRole3C8BC1B5"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-agent/Role/DefaultPolicy/Resource"
+   }
+  },
+  "Buildagent8833B977": {
+   "Type": "AWS::CodeBuild::Project",
+   "Properties": {
+    "Artifacts": {
+     "Type": "NO_ARTIFACTS"
+    },
+    "Cache": {
+     "Type": "NO_CACHE"
+    },
+    "EncryptionKey": "alias/aws/s3",
+    "Environment": {
+     "ComputeType": "BUILD_GENERAL1_SMALL",
+     "EnvironmentVariables": [
+      {
+       "Name": "PROJECT_NAME",
+       "Type": "PLAINTEXT",
+       "Value": "testproj"
+      },
+      {
+       "Name": "AWS_ACCOUNT_ID",
+       "Type": "PLAINTEXT",
+       "Value": "508564775785"
+      },
+      {
+       "Name": "CA_DOMAIN",
+       "Type": "PLAINTEXT",
+       "Value": "testproj"
+      },
+      {
+       "Name": "CA_REPO",
+       "Type": "PLAINTEXT",
+       "Value": "shared"
+      },
+      {
+       "Name": "CA_DOMAIN_OWNER",
+       "Type": "PLAINTEXT",
+       "Value": "508564775785"
+      },
+      {
+       "Name": "NODE_VERSION",
+       "Type": "PLAINTEXT",
+       "Value": "20"
+      }
+     ],
+     "Image": "aws/codebuild/standard:7.0",
+     "ImagePullCredentialsType": "CODEBUILD",
+     "PrivilegedMode": false,
+     "Type": "LINUX_CONTAINER"
+    },
+    "Name": "testproj-agent",
+    "ServiceRole": {
+     "Fn::GetAtt": [
+      "BuildagentRole3C8BC1B5",
+      "Arn"
+     ]
+    },
+    "Source": {
+     "BuildSpec": "buildspec.yml",
+     "Location": {
+      "Fn::GetAtt": [
+       "Repoagent131EDFD7",
+       "CloneUrlHttp"
+      ]
+     },
+     "Type": "CODECOMMIT"
+    },
+    "SourceVersion": "main"
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-agent/Resource"
+   }
+  },
+  "BuildagentEventsRoleB2EDD42E": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "events.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-agent/EventsRole/Resource"
+   }
+  },
+  "BuildagentEventsRoleDefaultPolicy3D7218F0": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "codebuild:StartBuild",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "Buildagent8833B977",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "BuildagentEventsRoleDefaultPolicy3D7218F0",
+    "Roles": [
+     {
+      "Ref": "BuildagentEventsRoleB2EDD42E"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-agent/EventsRole/DefaultPolicy/Resource"
+   }
+  },
+  "Repodashboard9C1BC4BB": {
+   "Type": "AWS::CodeCommit::Repository",
+   "Properties": {
+    "RepositoryDescription": "testproj :: dashboard",
+    "RepositoryName": "testproj-dashboard"
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Repo-dashboard/Resource"
+   }
+  },
+  "BuilddashboardRole230BE2BC": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "codebuild.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-dashboard/Role/Resource"
+   }
+  },
+  "BuilddashboardRoleDefaultPolicy5E4A6F54": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "codecommit:GitPull",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "Repodashboard9C1BC4BB",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":logs:us-east-1:508564775785:log-group:/aws/codebuild/",
+           {
+            "Ref": "BuilddashboardEE01FCE9"
+           }
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":logs:us-east-1:508564775785:log-group:/aws/codebuild/",
+           {
+            "Ref": "BuilddashboardEE01FCE9"
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "codebuild:CreateReportGroup",
+        "codebuild:CreateReport",
+        "codebuild:UpdateReport",
+        "codebuild:BatchPutTestCases",
+        "codebuild:BatchPutCodeCoverages"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":codebuild:us-east-1:508564775785:report-group/",
+          {
+           "Ref": "BuilddashboardEE01FCE9"
+          },
+          "-*"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "codeartifact:GetAuthorizationToken",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":codeartifact:us-east-1:508564775785:domain/testproj"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "sts:GetServiceBearerToken",
+       "Condition": {
+        "StringEquals": {
+         "sts:AWSServiceName": "codeartifact.amazonaws.com"
+        }
+       },
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "codeartifact:ReadFromRepository",
+        "codeartifact:GetRepositoryEndpoint",
+        "codeartifact:GetPackageVersionAsset",
+        "codeartifact:DescribePackageVersion",
+        "codeartifact:ListPackageVersions"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":codeartifact:us-east-1:508564775785:repository/testproj/shared"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":codeartifact:us-east-1:508564775785:repository/testproj/shared/*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":codeartifact:us-east-1:508564775785:package/testproj/shared/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "s3:GetObject*",
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:DeleteObject*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging",
+        "s3:Abort*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "SiteBucketdashboard6E5A8F03",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "SiteBucketdashboard6E5A8F03",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "cloudfront:CreateInvalidation",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:aws:cloudfront::508564775785:distribution/",
+          {
+           "Ref": "Cdndashboard40992F58"
+          }
+         ]
+        ]
+       }
+      },
+      {
+       "Action": [
+        "ssm:GetParameters",
+        "ssm:GetParameter"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":ssm:us-east-1:508564775785:parameter/testproj/*"
+         ]
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "BuilddashboardRoleDefaultPolicy5E4A6F54",
+    "Roles": [
+     {
+      "Ref": "BuilddashboardRole230BE2BC"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-dashboard/Role/DefaultPolicy/Resource"
+   }
+  },
+  "BuilddashboardEE01FCE9": {
+   "Type": "AWS::CodeBuild::Project",
+   "Properties": {
+    "Artifacts": {
+     "Type": "NO_ARTIFACTS"
+    },
+    "Cache": {
+     "Type": "NO_CACHE"
+    },
+    "EncryptionKey": "alias/aws/s3",
+    "Environment": {
+     "ComputeType": "BUILD_GENERAL1_SMALL",
+     "EnvironmentVariables": [
+      {
+       "Name": "PROJECT_NAME",
+       "Type": "PLAINTEXT",
+       "Value": "testproj"
+      },
+      {
+       "Name": "AWS_ACCOUNT_ID",
+       "Type": "PLAINTEXT",
+       "Value": "508564775785"
+      },
+      {
+       "Name": "CA_DOMAIN",
+       "Type": "PLAINTEXT",
+       "Value": "testproj"
+      },
+      {
+       "Name": "CA_REPO",
+       "Type": "PLAINTEXT",
+       "Value": "shared"
+      },
+      {
+       "Name": "CA_DOMAIN_OWNER",
+       "Type": "PLAINTEXT",
+       "Value": "508564775785"
+      },
+      {
+       "Name": "NODE_VERSION",
+       "Type": "PLAINTEXT",
+       "Value": "20"
+      },
+      {
+       "Name": "DEPLOY_BUCKET",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Ref": "SiteBucketdashboard6E5A8F03"
+       }
+      },
+      {
+       "Name": "CLOUDFRONT_DISTRIBUTION_ID",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Ref": "Cdndashboard40992F58"
+       }
+      }
+     ],
+     "Image": "aws/codebuild/standard:7.0",
+     "ImagePullCredentialsType": "CODEBUILD",
+     "PrivilegedMode": false,
+     "Type": "LINUX_CONTAINER"
+    },
+    "Name": "testproj-dashboard",
+    "ServiceRole": {
+     "Fn::GetAtt": [
+      "BuilddashboardRole230BE2BC",
+      "Arn"
+     ]
+    },
+    "Source": {
+     "BuildSpec": "buildspec.yml",
+     "Location": {
+      "Fn::GetAtt": [
+       "Repodashboard9C1BC4BB",
+       "CloneUrlHttp"
+      ]
+     },
+     "Type": "CODECOMMIT"
+    },
+    "SourceVersion": "main"
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-dashboard/Resource"
+   }
+  },
+  "BuilddashboardEventsRole045B15EC": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "events.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-dashboard/EventsRole/Resource"
+   }
+  },
+  "BuilddashboardEventsRoleDefaultPolicyCC59DEAB": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "codebuild:StartBuild",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "BuilddashboardEE01FCE9",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "BuilddashboardEventsRoleDefaultPolicyCC59DEAB",
+    "Roles": [
+     {
+      "Ref": "BuilddashboardEventsRole045B15EC"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/Build-dashboard/EventsRole/DefaultPolicy/Resource"
+   }
+  },
+  "SharedTypesPublishedB47A2422": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "EventPattern": {
+     "source": [
+      "aws.codebuild"
+     ],
+     "detail-type": [
+      "CodeBuild Build State Change"
+     ],
+     "detail": {
+      "build-status": [
+       "SUCCEEDED"
+      ],
+      "project-name": [
+       "testproj-shared-types"
+      ]
+     }
+    },
+    "State": "ENABLED",
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::GetAtt": [
+        "Buildfrontend87ACCBA3",
+        "Arn"
+       ]
+      },
+      "Id": "Target0",
+      "RoleArn": {
+       "Fn::GetAtt": [
+        "BuildfrontendEventsRole485F9FA2",
+        "Arn"
+       ]
+      }
+     },
+     {
+      "Arn": {
+       "Fn::GetAtt": [
+        "Buildbackend9FD203CF",
+        "Arn"
+       ]
+      },
+      "Id": "Target1",
+      "RoleArn": {
+       "Fn::GetAtt": [
+        "BuildbackendEventsRole9180FA7E",
+        "Arn"
+       ]
+      }
+     },
+     {
+      "Arn": {
+       "Fn::GetAtt": [
+        "Buildagent8833B977",
+        "Arn"
+       ]
+      },
+      "Id": "Target2",
+      "RoleArn": {
+       "Fn::GetAtt": [
+        "BuildagentEventsRoleB2EDD42E",
+        "Arn"
+       ]
+      }
+     },
+     {
+      "Arn": {
+       "Fn::GetAtt": [
+        "BuilddashboardEE01FCE9",
+        "Arn"
+       ]
+      },
+      "Id": "Target3",
+      "RoleArn": {
+       "Fn::GetAtt": [
+        "BuilddashboardEventsRole045B15EC",
+        "Arn"
+       ]
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/SharedTypesPublished/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/6VSTWsCMRD9LXqOqayUQm9+0KuyHouUbHZWRnczkploJeS/l90VtUgP0tO8yXuPmcck09nrmx4PzIlHttyPaix0XIuxe2VO/BUtlWC8YGWs6Div3IIag07NK5fDgRiF/DkpW1MoK09OdPwIzgpSp7niBbJ4LELXrCdLj1t0U2uBeU5OPNWt/I/ne3NSPNFxFuwepOV69BmHDX6jG74P75O0EXiiO4p1L50GoQXUILAsdmCFh0n9y71RPbWiGu35tlPfP7FZb1iLEWjAPbnYo3mTVHs9S02DouPtXA/HoxKKgHWp48pTm6pVXGBSaBodc6qh87X1lrRHScGxnaljHi6yUENKah5YqMmBKXjbE1f8i1p5OmIJfmYY1JQZZC1mi27b/YoghyBJOSpB7/jlmGU6G+vxYMeIIx+cYAM67+sPy+Lt4tECAAA="
+   },
+   "Metadata": {
+    "aws:cdk:path": "testproj-platform/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "CloneUrlorchestrator": {
+   "Description": "git-remote-codecommit clone URL for orchestrator",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "codecommit::us-east-1://",
+      {
+       "Fn::GetAtt": [
+        "RepoorchestratorC6BE8FF2",
+        "Name"
+       ]
+      }
+     ]
+    ]
+   }
+  },
+  "CloneUrlsharedtypes": {
+   "Description": "git-remote-codecommit clone URL for shared-types",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "codecommit::us-east-1://",
+      {
+       "Fn::GetAtt": [
+        "Reposharedtypes2261275B",
+        "Name"
+       ]
+      }
+     ]
+    ]
+   }
+  },
+  "CloneUrlfrontend": {
+   "Description": "git-remote-codecommit clone URL for frontend",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "codecommit::us-east-1://",
+      {
+       "Fn::GetAtt": [
+        "Repofrontend3A01BFBD",
+        "Name"
+       ]
+      }
+     ]
+    ]
+   }
+  },
+  "CloneUrlbackend": {
+   "Description": "git-remote-codecommit clone URL for backend",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "codecommit::us-east-1://",
+      {
+       "Fn::GetAtt": [
+        "RepobackendE412FC85",
+        "Name"
+       ]
+      }
+     ]
+    ]
+   }
+  },
+  "CloneUrlagent": {
+   "Description": "git-remote-codecommit clone URL for agent",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "codecommit::us-east-1://",
+      {
+       "Fn::GetAtt": [
+        "Repoagent131EDFD7",
+        "Name"
+       ]
+      }
+     ]
+    ]
+   }
+  },
+  "CloneUrldashboard": {
+   "Description": "git-remote-codecommit clone URL for dashboard",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "codecommit::us-east-1://",
+      {
+       "Fn::GetAtt": [
+        "Repodashboard9C1BC4BB",
+        "Name"
+       ]
+      }
+     ]
+    ]
+   }
+  },
+  "CodeArtifactRepo": {
+   "Description": "CodeArtifact domain/repo for npm packages",
+   "Value": "testproj/shared"
+  },
+  "frontendurl": {
+   "Description": "CloudFront URL for frontend",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Fn::GetAtt": [
+        "Cdnfrontend3287681E",
+        "DomainName"
+       ]
+      }
+     ]
+    ]
+   }
+  },
+  "dashboardurl": {
+   "Description": "CloudFront URL for dashboard",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Fn::GetAtt": [
+        "Cdndashboard40992F58",
+        "DomainName"
+       ]
+      }
+     ]
+    ]
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

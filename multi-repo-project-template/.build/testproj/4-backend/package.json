@@ -1,0 +1,25 @@
+{
+  "name": "testproj-backend",
+  "version": "0.1.0",
+  "private": true,
+  "bin": { "backend": "bin/backend.js" },
+  "scripts": {
+    "build": "tsc",
+    "synth": "cdk synth",
+    "deploy": "cdk deploy --require-approval never"
+  },
+  "dependencies": {
+    "@testproj/shared-types": "^0.2.0",
+    "@aws-sdk/client-dynamodb": "^3.600.0",
+    "aws-cdk-lib": "^2.150.0",
+    "constructs": "^10.3.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140",
+    "@types/node": "^20.0.0",
+    "aws-cdk": "^2.150.0",
+    "esbuild": "^0.21.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.0"
+  }
+}

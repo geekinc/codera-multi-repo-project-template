@@ -1,0 +1,20 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      nodejs: $NODE_VERSION
+  pre_build:
+    commands:
+      - echo "Authenticating npm to CodeArtifact..."
+      - aws codeartifact login --tool npm --domain "$CA_DOMAIN" --domain-owner "$CA_DOMAIN_OWNER" --repository "$CA_REPO" --region "$AWS_DEFAULT_REGION"
+      - npm ci || npm install
+  build:
+    commands:
+      - npm run build
+  post_build:
+    commands:
+      # Publish; if this exact version already exists, npm returns 409 — tolerate it.
+      - PKG=$(node -p "require('./package.json').name")
+      - VER=$(node -p "require('./package.json').version")
+      - echo "Publishing $PKG@$VER"
+      - npm publish || echo "Version may already exist; skipping publish."

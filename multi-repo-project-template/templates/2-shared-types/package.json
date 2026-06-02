@@ -1,0 +1,16 @@
+{
+  "name": "{{NPM_SCOPE}}/shared-types",
+  "version": "0.2.0",
+  "description": "Shared types for {{PROJECT_NAME}}, consumed by frontend, backend, agent, and dashboard.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "publishConfig": {
+    "registry": "https://{{CODEARTIFACT_DOMAIN}}-{{AWS_ACCOUNT_ID}}.d.codeartifact.{{AWS_REGION}}.amazonaws.com/npm/{{CODEARTIFACT_REPO}}/"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": { "typescript": "^5.4.0" }
+}

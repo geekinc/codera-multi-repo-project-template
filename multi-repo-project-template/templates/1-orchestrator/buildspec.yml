@@ -1,0 +1,18 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      nodejs: $NODE_VERSION
+  build:
+    commands:
+      - echo "Validating orchestrator structure..."
+      - test -f ARCHITECTURE.md || (echo "Missing ARCHITECTURE.md" && exit 1)
+      - test -f MASTER.md || (echo "Missing MASTER.md" && exit 1)
+      - test -f SYNC.md || (echo "Missing SYNC.md" && exit 1)
+      - test -f ORCHESTRATOR_PROMPT.md || (echo "Missing ORCHESTRATOR_PROMPT.md" && exit 1)
+      - test -f tasks/TASK_TEMPLATE.md || (echo "Missing tasks/TASK_TEMPLATE.md" && exit 1)
+      - test -d tasks/active || (echo "Missing tasks/active/" && exit 1)
+      - test -d tasks/backlog || (echo "Missing tasks/backlog/" && exit 1)
+      - test -d tasks/completed || (echo "Missing tasks/completed/" && exit 1)
+      - test -f sync-check.sh || (echo "Missing sync-check.sh" && exit 1)
+      - echo "Orchestrator structure OK."

@@ -1,0 +1,13 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      nodejs: $NODE_VERSION
+  pre_build:
+    commands:
+      - aws codeartifact login --tool npm --domain "$CA_DOMAIN" --domain-owner "$CA_DOMAIN_OWNER" --repository "$CA_REPO" --region "$AWS_DEFAULT_REGION"
+      - npm ci || npm install
+  build:
+    commands:
+      - npm run build
+      - npx cdk deploy --require-approval never

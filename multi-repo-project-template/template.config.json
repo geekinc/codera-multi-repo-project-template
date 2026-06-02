@@ -1,0 +1,20 @@
+{
+  "$comment": "Edit these values, or pass them as flags to bootstrap/new-project.sh. Placeholders of the form {{KEY}} are replaced throughout the templates/ tree.",
+  "PROJECT_NAME": "testproj",
+  "PROJECT_DESCRIPTION": "A short human-readable description of the project.",
+  "AWS_REGION": "us-east-1",
+  "AWS_ACCOUNT_ID": "508564775785",
+  "CODEARTIFACT_DOMAIN": "testproj",
+  "CODEARTIFACT_REPO": "shared",
+  "NPM_SCOPE": "@testproj",
+  "NODE_VERSION": "20",
+  "DASHBOARD_AUTH_KEY": "changeme-testproj-2026",
+  "REPOS": [
+    "orchestrator",
+    "shared-types",
+    "frontend",
+    "backend",
+    "agent",
+    "dashboard"
+  ]
+}

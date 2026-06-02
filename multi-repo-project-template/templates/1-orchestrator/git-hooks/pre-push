@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# pre-push hook — installed in each sub-agent repo's .git/hooks/pre-push
+# Checks the orchestrator's SYNC.md for active locks before allowing a push.
+#
+# Installed automatically by clone-workspace.sh.
+
+set -e
+
+ORCH_DIR="../orchestrator"
+SYNC_FILE="$ORCH_DIR/SYNC.md"
+
+echo "-> Checking sync state before push..."
+
+if [ -d "$ORCH_DIR" ]; then
+  cd "$ORCH_DIR"
+  git pull origin main --quiet 2>/dev/null || echo "  [warn] Could not pull orchestrator (offline?)"
+  cd - > /dev/null
+else
+  echo "  [warn] orchestrator not found at $ORCH_DIR — skipping sync check"
+  exit 0
+fi
+
+if grep -q "| active |" "$SYNC_FILE" 2>/dev/null; then
+  LOCKS=$(grep -A 20 "## Active Locks" "$SYNC_FILE" | grep "| active |" || true)
+  if [ -n "$LOCKS" ]; then
+    echo ""
+    echo "  !! Active locks found in orchestrator/SYNC.md:"
+    echo "$LOCKS"
+    echo ""
+    echo "  A shared resource is currently being modified by another agent."
+    echo "  Pull orchestrator and read SYNC.md before pushing."
+    echo ""
+    read -p "  Continue push anyway? (y/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      echo "  Push cancelled. Pull orchestrator and review SYNC.md."
+      exit 1
+    fi
+  fi
+fi
+
+echo "  OK — sync check complete."
+exit 0
