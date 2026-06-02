@@ -15,7 +15,7 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$HERE/multi-repo-test-project"
+ROOT="$HERE/multi-repo-project-template"
 CONFIG="$ROOT/template.config.json"
 
 # --- args ---------------------------------------------------------------
