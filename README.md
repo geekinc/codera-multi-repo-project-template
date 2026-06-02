@@ -15,13 +15,16 @@ for a Claude Code workflow where each repo has a focused responsibility.
 ## How it works
 
 ```
-project-template/
-├── template.config.json     # placeholders ({{PROJECT_NAME}}, region, scope, ...)
+codera-multi-repo-project-template/
+├── template.json              # Codera platform manifest (source_path references)
+├── template.config.json       # placeholders ({{PROJECT_NAME}}, region, scope, ...)
+├── new-project.sh             # templates, deploys infra, pushes 6 repos
 ├── bootstrap/
-│   ├── new-project.sh        # templates, deploys infra, pushes 6 repos
-│   ├── clone-workspace.sh    # clones all 6 repos side by side for Claude Code
-│   └── infra/                # CDK app: CodeCommit + CodeArtifact + CodeBuild
-└── templates/                # the 6 repo templates with {{PLACEHOLDERS}}
+│   ├── new-project.sh         # same script, resolves paths relative to bootstrap/
+│   ├── clone-workspace.sh     # clones all 6 repos side by side for Claude Code
+│   ├── teardown.sh            # destroys all AWS resources for a test project
+│   └── infra/                 # CDK app: CodeCommit + CodeArtifact + CodeBuild
+└── templates/                 # the 6 repo templates with {{PLACEHOLDERS}}
 ```
 
 `new-project.sh` copies `templates/`, substitutes placeholders, deploys the CDK

@@ -15,7 +15,7 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$HERE/multi-repo-project-template"
+ROOT="$HERE"
 CONFIG="$ROOT/template.config.json"
 
 # --- args ---------------------------------------------------------------
@@ -60,6 +60,8 @@ CA_REPO="$(cfg CODEARTIFACT_REPO)"
 NPM_SCOPE="$(cfg NPM_SCOPE)"
 NODE_VERSION="$(cfg NODE_VERSION)"
 PROJECT_DESCRIPTION="$(cfg PROJECT_DESCRIPTION)"
+DASHBOARD_AUTH_KEY="$(cfg DASHBOARD_AUTH_KEY 2>/dev/null || echo "")"
+[[ "$DASHBOARD_AUTH_KEY" == "null" ]] && DASHBOARD_AUTH_KEY=""
 
 # Resolve the real account id if the config still has the placeholder.
 if [[ "$AWS_ACCOUNT_ID" == "000000000000" ]]; then
@@ -103,12 +105,15 @@ if [[ "$SKIP_INFRA" == "false" ]]; then
   echo ">> Deploying infrastructure (CodeArtifact + CodeCommit + CodeBuild)..."
   pushd "$ROOT/bootstrap/infra" >/dev/null
     npm install --silent
-    npx cdk deploy --require-approval never \
-      --context projectName="$PROJECT_NAME" \
-      --context region="$AWS_REGION" \
-      --context caDomain="$CA_DOMAIN" \
-      --context caRepo="$CA_REPO" \
+    CDK_CONTEXT_ARGS=(
+      --context projectName="$PROJECT_NAME"
+      --context region="$AWS_REGION"
+      --context caDomain="$CA_DOMAIN"
+      --context caRepo="$CA_REPO"
       --context nodeVersion="$NODE_VERSION"
+    )
+    [[ -n "$DASHBOARD_AUTH_KEY" ]] && CDK_CONTEXT_ARGS+=(--context dashboardAuthKey="$DASHBOARD_AUTH_KEY")
+    npx cdk deploy --require-approval never "${CDK_CONTEXT_ARGS[@]}"
   popd >/dev/null
 else
   echo ">> Skipping infrastructure (--skip-infra)."

@@ -44,14 +44,14 @@
       "id": "orchestrator",
       "name": "{{PROJECT_NAME}}-orchestrator",
       "type": "system",
-      "source_path": "multi-repo-project-template/templates/1-orchestrator",
+      "source_path": "templates/1-orchestrator",
       "description": "Architecture, tasks, and coordination — Claude Code agent hub"
     },
     {
       "id": "shared-types",
       "name": "{{PROJECT_NAME}}-shared-types",
       "type": "module",
-      "source_path": "multi-repo-project-template/templates/2-shared-types",
+      "source_path": "templates/2-shared-types",
       "auto_build": true,
       "description": "Shared TypeScript interfaces — publishes to CodeArtifact"
     },
@@ -59,7 +59,7 @@
       "id": "frontend",
       "name": "{{PROJECT_NAME}}-frontend",
       "type": "frontend",
-      "source_path": "multi-repo-project-template/templates/3-frontend",
+      "source_path": "templates/3-frontend",
       "auto_build": true,
       "depends_on": ["shared-types"],
       "description": "React + Tailwind CRUD app"
@@ -68,7 +68,7 @@
       "id": "backend",
       "name": "{{PROJECT_NAME}}-backend",
       "type": "module",
-      "source_path": "multi-repo-project-template/templates/4-backend",
+      "source_path": "templates/4-backend",
       "auto_build": true,
       "depends_on": ["shared-types"],
       "description": "CDK infrastructure + API handlers"
@@ -77,7 +77,7 @@
       "id": "agent",
       "name": "{{PROJECT_NAME}}-agent",
       "type": "module",
-      "source_path": "multi-repo-project-template/templates/5-agent",
+      "source_path": "templates/5-agent",
       "auto_build": true,
       "depends_on": ["shared-types"],
       "description": "AI agent scripts and prompts"
@@ -86,7 +86,7 @@
       "id": "dashboard",
       "name": "{{PROJECT_NAME}}-dashboard",
       "type": "frontend",
-      "source_path": "multi-repo-project-template/templates/6-dashboard",
+      "source_path": "templates/6-dashboard",
       "auto_build": true,
       "depends_on": ["shared-types"],
       "description": "Monitoring dashboard with Recharts"
