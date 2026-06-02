@@ -1,0 +1,95 @@
+{
+  "name": "codera-multi-repo-project-template",
+  "version": "1.0.0",
+  "description": "Full-stack multi-repo project with orchestrator, shared types, frontend, backend, agent, and dashboard. Includes CodeArtifact package sharing, EventBridge build ordering, and Claude Code agent coordination.",
+  "variables": [
+    {
+      "key": "PROJECT_NAME",
+      "label": "Project Name",
+      "description": "Short lowercase identifier used in repo names, resource names, and npm scope",
+      "required": true,
+      "validation": "^[a-z][a-z0-9-]{1,20}$"
+    },
+    {
+      "key": "PROJECT_DESCRIPTION",
+      "label": "Project Description",
+      "description": "Short human-readable description of the project",
+      "required": false,
+      "default": "A multi-repo project created from the Codera template"
+    },
+    {
+      "key": "NPM_SCOPE",
+      "label": "NPM Scope",
+      "description": "npm package scope for shared-types (e.g., @myproject)",
+      "required": true,
+      "default": "@{{PROJECT_NAME}}"
+    },
+    {
+      "key": "NODE_VERSION",
+      "label": "Node.js Version",
+      "description": "Node.js major version for builds",
+      "required": false,
+      "default": "20"
+    },
+    {
+      "key": "DASHBOARD_AUTH_KEY",
+      "label": "Dashboard Auth Key",
+      "description": "Pre-shared key for dashboard CloudFront Function authentication",
+      "required": false,
+      "default": ""
+    }
+  ],
+  "repositories": [
+    {
+      "id": "orchestrator",
+      "name": "{{PROJECT_NAME}}-orchestrator",
+      "type": "system",
+      "source_path": "multi-repo-project-template/templates/1-orchestrator",
+      "description": "Architecture, tasks, and coordination — Claude Code agent hub"
+    },
+    {
+      "id": "shared-types",
+      "name": "{{PROJECT_NAME}}-shared-types",
+      "type": "module",
+      "source_path": "multi-repo-project-template/templates/2-shared-types",
+      "auto_build": true,
+      "description": "Shared TypeScript interfaces — publishes to CodeArtifact"
+    },
+    {
+      "id": "frontend",
+      "name": "{{PROJECT_NAME}}-frontend",
+      "type": "frontend",
+      "source_path": "multi-repo-project-template/templates/3-frontend",
+      "auto_build": true,
+      "depends_on": ["shared-types"],
+      "description": "React + Tailwind CRUD app"
+    },
+    {
+      "id": "backend",
+      "name": "{{PROJECT_NAME}}-backend",
+      "type": "module",
+      "source_path": "multi-repo-project-template/templates/4-backend",
+      "auto_build": true,
+      "depends_on": ["shared-types"],
+      "description": "CDK infrastructure + API handlers"
+    },
+    {
+      "id": "agent",
+      "name": "{{PROJECT_NAME}}-agent",
+      "type": "module",
+      "source_path": "multi-repo-project-template/templates/5-agent",
+      "auto_build": true,
+      "depends_on": ["shared-types"],
+      "description": "AI agent scripts and prompts"
+    },
+    {
+      "id": "dashboard",
+      "name": "{{PROJECT_NAME}}-dashboard",
+      "type": "frontend",
+      "source_path": "multi-repo-project-template/templates/6-dashboard",
+      "auto_build": true,
+      "depends_on": ["shared-types"],
+      "description": "Monitoring dashboard with Recharts"
+    }
+  ]
+}
