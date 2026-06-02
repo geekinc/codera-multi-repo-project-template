@@ -1,0 +1,13 @@
+version: "1.0"
+module:
+  name: "{{PROJECT_NAME}}-shared-types"
+  description: "Shared TypeScript interfaces — publishes to CodeArtifact"
+runtime: nodejs20.x
+build:
+  pre_build_commands:
+    - aws codeartifact login --tool npm --domain "$CA_DOMAIN" --domain-owner "$CA_DOMAIN_OWNER" --repository "$CA_REPO" --region "$AWS_DEFAULT_REGION"
+    - npm install
+  command: npm run build
+  post_build_commands:
+    - npm publish || echo "Version may already exist; skipping publish."
+  output: dist
