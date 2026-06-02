@@ -79,7 +79,7 @@
       "name": "{{PROJECT_NAME}}-agent",
       "type": "module",
       "source_path": "templates/5-agent",
-      "auto_build": true,
+      "auto_build": false,
       "depends_on": ["shared-types"],
       "description": "AI agent scripts and prompts"
     },
