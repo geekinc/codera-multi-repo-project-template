@@ -9,11 +9,11 @@ and prompts that drive the backend APIs. You consume
 ## Session Start
 
 1. `git pull origin main`
-2. `bash ../orchestrator/sync-check.sh`
-3. Read `../orchestrator/MASTER.md`
+2. `bash ../{{PROJECT_NAME}}-orchestrator/sync-check.sh`
+3. Read `../{{PROJECT_NAME}}-orchestrator/MASTER.md`
 4. Read this file (`CLAUDE.md`)
-5. Read your active task at `../orchestrator/tasks/active/TASK-NNN-*.md`
-6. Read relevant sections of `../orchestrator/ARCHITECTURE.md`
+5. Read your active task at `../{{PROJECT_NAME}}-orchestrator/tasks/active/TASK-NNN-*.md`
+6. Read relevant sections of `../{{PROJECT_NAME}}-orchestrator/ARCHITECTURE.md`
 7. Begin implementation
 
 ---

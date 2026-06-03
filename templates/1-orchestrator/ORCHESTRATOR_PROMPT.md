@@ -97,7 +97,7 @@ from reinventing things that exist.]
 
 ## Your Task
 
-Read the task file at `../orchestrator/tasks/active/TASK-NNN-slug.md` — it
+Read the task file at `../{{PROJECT_NAME}}-orchestrator/tasks/active/TASK-NNN-slug.md` — it
 contains the full acceptance criteria, files to read, and expected changes.
 
 ### Key Requirements
@@ -113,7 +113,8 @@ files in this repo AND in orchestrator (architecture sections)]
 ### Boundaries
 
 - You may ONLY modify files in `[REPO]/`
-- Do NOT modify `../shared-types/`, `../orchestrator/`, or any other repo
+- Do NOT modify `../shared-types/`, `../{{PROJECT_NAME}}-orchestrator/`, or any other repo — with
+  the sole exception of your own task file in the orchestrator (you may update that file)
 - If you need a type that doesn't exist in `{{NPM_SCOPE}}/shared-types`, stop and
   tell me — do not define it locally
 - If you need an API endpoint that doesn't exist, stop and tell me — do not
@@ -141,8 +142,8 @@ When all acceptance criteria are met:
 ## Session Start
 
 1. `git pull origin main`
-2. Run `bash ../orchestrator/sync-check.sh` to pull latest orchestrator state
-3. Read your task file at `../orchestrator/tasks/active/TASK-NNN-slug.md`
+2. Run `bash ../{{PROJECT_NAME}}-orchestrator/sync-check.sh` to pull latest orchestrator state
+3. Read your task file at `../{{PROJECT_NAME}}-orchestrator/tasks/active/TASK-NNN-slug.md`
 4. Read the files listed in "Files to Read First" above
 5. Begin implementation
 ```

@@ -37,7 +37,7 @@
 
 ## Architecture Reference
 
-Full architecture reference: `../orchestrator/ARCHITECTURE.md` (readable by agents from any repo in the workspace)
+Full architecture reference: `../{{PROJECT_NAME}}-orchestrator/ARCHITECTURE.md` (readable by agents from any repo in the workspace)
 
 ---
 
@@ -112,12 +112,12 @@ Every PR description must include this checklist completed:
 
 At the start of every session, in this order:
 
-1. Run `bash ../orchestrator/sync-check.sh` — pulls orchestrator and shows current sync state
-2. If `{{NPM_SCOPE}}/shared-types` version is newer than your local install: `cd ../shared-types && git pull && npm run build && cd - && npm install`
-3. Read `../orchestrator/MASTER.md` (this file)
+1. Run `bash ../{{PROJECT_NAME}}-orchestrator/sync-check.sh` — pulls orchestrator and shows current sync state
+2. If `{{NPM_SCOPE}}/shared-types` version is newer than your local install: `cd ../{{PROJECT_NAME}}-shared-types && git pull && npm run build && cd - && npm install`
+3. Read `../{{PROJECT_NAME}}-orchestrator/MASTER.md` (this file)
 4. Read `CLAUDE.md` in your assigned repository
-5. Read the relevant sections of `../orchestrator/ARCHITECTURE.md`
-6. Read the active task file in `../orchestrator/tasks/active/`
+5. Read the relevant sections of `../{{PROJECT_NAME}}-orchestrator/ARCHITECTURE.md`
+6. Read the active task file in `../{{PROJECT_NAME}}-orchestrator/tasks/active/`
 7. Only then begin implementation
 
 ---
@@ -131,8 +131,8 @@ on shared dependencies or building against stale contracts.
 
 These resources are shared across repos. Changes to them affect all agents:
 
-- `../orchestrator/ARCHITECTURE.md` — Architecture decisions
-- `../shared-types/src/index.ts` — Shared TypeScript interfaces
+- `../{{PROJECT_NAME}}-orchestrator/ARCHITECTURE.md` — Architecture decisions
+- `../{{PROJECT_NAME}}-shared-types/src/index.ts` — Shared TypeScript interfaces
 
 Changes to any of these require the Lock + Notify cycle below.
 

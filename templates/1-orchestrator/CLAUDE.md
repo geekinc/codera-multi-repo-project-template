@@ -117,7 +117,7 @@ grep -r "Status.*Complete" tasks/active/
 ## File Layout You Own
 
 ```
-orchestrator/
+{{PROJECT_NAME}}-orchestrator/
   CLAUDE.md              <- this file
   MASTER.md              <- golden rules (do not modify without instruction)
   ORCHESTRATOR_PROMPT.md <- the prompt to start an orchestrator session

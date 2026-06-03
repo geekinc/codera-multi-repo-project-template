@@ -11,3 +11,7 @@ phases:
     commands:
       - npm run build
       - npx cdk deploy --require-approval never
+artifacts:
+  base-directory: cdk.out
+  files:
+    - "**/*"
