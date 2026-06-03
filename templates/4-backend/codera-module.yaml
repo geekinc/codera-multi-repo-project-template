@@ -2,7 +2,7 @@ version: "1.0"
 module:
   name: "{{PROJECT_NAME}}-backend"
   description: "CDK infrastructure + API handlers"
-runtime: nodejs22.x
+runtime: nodejs20.x
 build:
   pre_build_commands:
     - aws codeartifact login --tool npm --domain "$CA_DOMAIN" --domain-owner "$CA_DOMAIN_OWNER" --repository "$CA_REPO" --region "$AWS_DEFAULT_REGION"
