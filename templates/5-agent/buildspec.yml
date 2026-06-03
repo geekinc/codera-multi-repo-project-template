@@ -3,19 +3,8 @@ phases:
   install:
     runtime-versions:
       nodejs: $NODE_VERSION
-  pre_build:
-    commands:
-      - aws codeartifact login --tool npm --domain "$CA_DOMAIN" --domain-owner "$CA_DOMAIN_OWNER" --repository "$CA_REPO" --region "$AWS_DEFAULT_REGION"
-      - npm install
   build:
     commands:
-      - npm run build
-  post_build:
-    commands:
-      # Package the agent scripts/prompts/config as a versioned artifact.
-      - echo "Packaging agent bundle..."
-artifacts:
-  files:
-    - "dist/**/*"
-    - "prompts/**/*"
-    - "config/**/*"
+      - echo "Validating agent structure..."
+      - test -f CLAUDE.md || (echo "Missing CLAUDE.md" && exit 1)
+      - echo "Agent structure OK."

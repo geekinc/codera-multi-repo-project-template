@@ -1,0 +1,12 @@
+version: "1.0"
+module:
+  name: "{{PROJECT_NAME}}-frontend"
+  description: "Vite + React frontend — builds static assets to dist/"
+runtime: nodejs22.x
+build:
+  pre_build_commands:
+    - aws codeartifact login --tool npm --domain "$CA_DOMAIN" --domain-owner "$CA_DOMAIN_OWNER" --repository "$CA_REPO" --region "$AWS_DEFAULT_REGION"
+    - npm install
+    - export VITE_API_BASE_URL=$(aws ssm get-parameter --name "/$PROJECT_NAME/api-base-url" --query "Parameter.Value" --output text 2>/dev/null || echo "")
+  command: npm run build
+  output: dist
