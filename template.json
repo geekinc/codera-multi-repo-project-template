@@ -30,7 +30,8 @@
       "label": "Node.js Version",
       "description": "Node.js major version for builds",
       "required": false,
-      "default": "20"
+      "default": "20",
+      "hidden": true
     },
     {
       "key": "DASHBOARD_AUTH_KEY",
