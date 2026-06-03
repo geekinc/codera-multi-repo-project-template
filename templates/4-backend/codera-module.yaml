@@ -4,6 +4,7 @@ module:
   description: "CDK infrastructure + API handlers"
 runtime: nodejs20.x
 build:
+  output: cdk.out
   pre_build_commands:
     - aws codeartifact login --tool npm --domain "$CA_DOMAIN" --domain-owner "$CA_DOMAIN_OWNER" --repository "$CA_REPO" --region "$AWS_DEFAULT_REGION"
     - npm install
