@@ -1,5 +1,5 @@
 {
-  "name": "codera-multi-repo-project-template",
+  "name": "CDK-Based mulit-repo project",
   "version": "1.0.0",
   "description": "Full-stack multi-repo project with orchestrator, shared types, frontend, backend, agent, and dashboard. Includes CodeArtifact package sharing, EventBridge build ordering, and Claude Code agent coordination.",
   "variables": [
