@@ -1,12 +1,9 @@
-version: "1.0"
-module:
-  name: "{{PROJECT_NAME}}-dashboard"
-  description: "Vite + React dashboard — builds static assets to dist/"
-runtime: nodejs20.x
+name: "{{PROJECT_NAME}}-dashboard"
 build:
-  pre_build_commands:
-    - aws codeartifact login --tool npm --domain "$CA_DOMAIN" --domain-owner "$CA_DOMAIN_OWNER" --repository "$CA_REPO" --region "$AWS_DEFAULT_REGION"
-    - npm install
-    - export VITE_API_BASE_URL=$(aws ssm get-parameter --name "/$PROJECT_NAME/api-base-url" --query "Parameter.Value" --output text 2>/dev/null || echo "")
   command: npm run build
   output: dist
+  node_version: "20"
+  pre_build_commands:
+    - aws codeartifact login --tool npm --domain "$CA_DOMAIN" --domain-owner "$CA_DOMAIN_OWNER" --repository "$CA_REPO" --region "$AWS_DEFAULT_REGION"
+    - export VITE_API_BASE_URL=$(aws ssm get-parameter --name "/$PROJECT_NAME/api-base-url" --query "Parameter.Value" --output text 2>/dev/null || echo "")
+routing: spa
