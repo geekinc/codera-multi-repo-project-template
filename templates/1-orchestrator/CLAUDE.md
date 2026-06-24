@@ -73,7 +73,7 @@ Tasks must have:
 
 - **Do not write application code** in any repo other than this one
 - **Do not push to sub-agent repos** — you can read them, not write them
-- **Do not modify** `ARCHITECTURE.md` without explicit instruction — this is a source-of-truth document
+- **Do not modify** `docs/ARCHITECTURE.md` without explicit instruction — this is a source-of-truth document
 - **Do not approve your own lock claims** — locks are for sub-agents coordinating on shared resources
 - **Do not execute work targeting other repos yourself.** When the user describes
   a change, bug fix, or feature that affects any repo other than this one,
@@ -109,7 +109,7 @@ grep -r "Status.*Complete" tasks/active/
 3. Read `SYNC.md`
 4. Check `tasks/active/` for any completed tasks needing archival
 5. Check `tasks/backlog/` for queued work
-6. Read `ARCHITECTURE.md` section index — know what's there
+6. Read `docs/ARCHITECTURE.md` section index — know what's there
 7. Wait for instructions or proceed with status review if asked
 
 ---
@@ -121,8 +121,13 @@ grep -r "Status.*Complete" tasks/active/
   CLAUDE.md              <- this file
   MASTER.md              <- golden rules (do not modify without instruction)
   ORCHESTRATOR_PROMPT.md <- the prompt to start an orchestrator session
-  ARCHITECTURE.md        <- detailed architecture reference
   SYNC.md                <- live coordination board (update frequently)
+  docs/                  <- markdown docs (surface in the Codera Docs view)
+    ARCHITECTURE.md      <- detailed architecture reference
+    README.md            <- docs convention
+  assets/                <- uploads from the Codera orchestrator card
+    uploads/             <- committed uploaded files (screenshots, designs)
+    README.md            <- assets convention
   tasks/
     active/              <- tasks currently assigned to sub-agents
     backlog/             <- tasks waiting to be promoted

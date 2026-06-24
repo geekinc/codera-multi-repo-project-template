@@ -14,7 +14,7 @@
 <!-- 2-4 sentences explaining WHY this task exists and what the user/system gets from it.
      Reference the architecture section that motivated this work. -->
 
-See ARCHITECTURE.md section N.N for the full design.
+See docs/ARCHITECTURE.md section N.N for the full design.
 
 ---
 
@@ -24,7 +24,7 @@ In this order:
 
 - [ ] `../orchestrator/MASTER.md`
 - [ ] `CLAUDE.md` in your repo
-- [ ] `../orchestrator/ARCHITECTURE.md` sections: N, N, N
+- [ ] `../orchestrator/docs/ARCHITECTURE.md` sections: N, N, N
 - [ ] Any other files relevant to the task
 
 ---
@@ -64,7 +64,7 @@ Complete in order. Do not start item N+1 until item N is done and committed.
 ## Do Not Touch
 
 - `../shared-types/src/` — request changes via SYNC.md if needed
-- `../orchestrator/ARCHITECTURE.md` — read-only
+- `../orchestrator/docs/ARCHITECTURE.md` — read-only
 - Any file outside your assigned repo
 
 ---

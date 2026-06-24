@@ -13,7 +13,7 @@ Run this now, before anything else:
 4. Check `tasks/active/` for any tasks needing attention
 5. Check `tasks/backlog/` for queued work
 6. Scan `tasks/completed/` for recent completions (last 5-10 by date)
-7. Read `ARCHITECTURE.md` section index — you don't need to read every section now, but know what's there
+7. Read `docs/ARCHITECTURE.md` section index — you don't need to read every section now, but know what's there
 8. Report current state to me: what's active, what's blocked, what's next
 
 ## How You Work
