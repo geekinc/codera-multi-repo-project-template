@@ -37,7 +37,7 @@
 
 ## Architecture Reference
 
-Full architecture reference: `../{{PROJECT_NAME}}-orchestrator/ARCHITECTURE.md` (readable by agents from any repo in the workspace)
+Full architecture reference: `../{{PROJECT_NAME}}-orchestrator/docs/ARCHITECTURE.md` (readable by agents from any repo in the workspace)
 
 ---
 
@@ -116,7 +116,7 @@ At the start of every session, in this order:
 2. If `{{NPM_SCOPE}}/shared-types` version is newer than your local install: `cd ../{{PROJECT_NAME}}-shared-types && git pull && npm run build && cd - && npm install`
 3. Read `../{{PROJECT_NAME}}-orchestrator/MASTER.md` (this file)
 4. Read `CLAUDE.md` in your assigned repository
-5. Read the relevant sections of `../{{PROJECT_NAME}}-orchestrator/ARCHITECTURE.md`
+5. Read the relevant sections of `../{{PROJECT_NAME}}-orchestrator/docs/ARCHITECTURE.md`
 6. Read the active task file in `../{{PROJECT_NAME}}-orchestrator/tasks/active/`
 7. Only then begin implementation
 
@@ -131,7 +131,7 @@ on shared dependencies or building against stale contracts.
 
 These resources are shared across repos. Changes to them affect all agents:
 
-- `../{{PROJECT_NAME}}-orchestrator/ARCHITECTURE.md` — Architecture decisions
+- `../{{PROJECT_NAME}}-orchestrator/docs/ARCHITECTURE.md` — Architecture decisions
 - `../{{PROJECT_NAME}}-shared-types/src/index.ts` — Shared TypeScript interfaces
 
 Changes to any of these require the Lock + Notify cycle below.

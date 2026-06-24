@@ -6,7 +6,7 @@ phases:
   build:
     commands:
       - echo "Validating orchestrator structure..."
-      - test -f ARCHITECTURE.md || (echo "Missing ARCHITECTURE.md" && exit 1)
+      - test -f docs/ARCHITECTURE.md || (echo "Missing docs/ARCHITECTURE.md" && exit 1)
       - test -f MASTER.md || (echo "Missing MASTER.md" && exit 1)
       - test -f SYNC.md || (echo "Missing SYNC.md" && exit 1)
       - test -f ORCHESTRATOR_PROMPT.md || (echo "Missing ORCHESTRATOR_PROMPT.md" && exit 1)

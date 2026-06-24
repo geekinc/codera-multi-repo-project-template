@@ -13,7 +13,7 @@ display system health. You consume types from `{{NPM_SCOPE}}/shared-types`.
 3. Read `../{{PROJECT_NAME}}-orchestrator/MASTER.md`
 4. Read this file (`CLAUDE.md`)
 5. Read your active task at `../{{PROJECT_NAME}}-orchestrator/tasks/active/TASK-NNN-*.md`
-6. Read relevant sections of `../{{PROJECT_NAME}}-orchestrator/ARCHITECTURE.md`
+6. Read relevant sections of `../{{PROJECT_NAME}}-orchestrator/docs/ARCHITECTURE.md`
 7. Begin implementation
 
 ---
