@@ -30,7 +30,7 @@ export class BackendStack extends cdk.Stack {
 
     // API handler Lambda
     const apiFn = new NodejsFunction(this, "ApiFn", {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: lambda.Runtime.NODEJS_22_X,
       entry: path.join(__dirname, "../src/handlers/api.ts"),
       handler: "handler",
       environment: {

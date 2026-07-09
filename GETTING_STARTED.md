@@ -120,7 +120,7 @@ exported `AWS_PROFILE`).
   "NPM_SCOPE": "@testproj",
   "CODEARTIFACT_DOMAIN": "testproj",
   "CODEARTIFACT_REPO": "shared",
-  "NODE_VERSION": "20"
+  "NODE_VERSION": "22"
 }
 ```
 
@@ -143,7 +143,7 @@ npx cdk synth \
   --context region=ca-central-1 \
   --context caDomain=testproj \
   --context caRepo=shared \
-  --context nodeVersion=20
+  --context nodeVersion=22
 cd ../..
 ```
 

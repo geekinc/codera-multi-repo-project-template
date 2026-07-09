@@ -2,11 +2,15 @@ version: "1.0"
 module:
   name: "{{PROJECT_NAME}}-backend"
   description: "CDK infrastructure + API handlers"
-runtime: nodejs20.x
+runtime: nodejs22.x
 build:
   output: cdk.out
   cdk_stack_name: "{{PROJECT_NAME}}-backend"
   pre_build_commands:
+    # Only the CodeArtifact login belongs here. The Codera platform's
+    # module-buildspec generator appends the runtime install command
+    # (`npm install`) after these pre_build_commands itself — declaring
+    # `npm install` here too makes PRE_BUILD run it twice (TASK-1759).
+    # Do not add `npm install` back.
     - aws codeartifact login --tool npm --domain "$CA_DOMAIN" --domain-owner "$CA_DOMAIN_OWNER" --repository "$CA_REPO" --region "$AWS_DEFAULT_REGION"
-    - npm install
   command: "npm run build && npx cdk deploy --require-approval never"

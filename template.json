@@ -1,6 +1,6 @@
 {
   "name": "CDK-Based mulit-repo project",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Full-stack multi-repo project with orchestrator, shared types, frontend, backend, agent, and dashboard. Includes CodeArtifact package sharing, EventBridge build ordering, and Claude Code agent coordination.",
   "variables": [
     {
@@ -30,7 +30,7 @@
       "label": "Node.js Version",
       "description": "Node.js major version for builds",
       "required": false,
-      "default": "20",
+      "default": "22",
       "hidden": true
     },
     {
