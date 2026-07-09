@@ -2,11 +2,15 @@ version: "1.0"
 module:
   name: "{{PROJECT_NAME}}-shared-types"
   description: "Shared TypeScript interfaces — publishes to CodeArtifact"
-runtime: nodejs20.x
+runtime: nodejs22.x
 build:
   pre_build_commands:
+    # Only the CodeArtifact login belongs here. The Codera platform's
+    # module-buildspec generator appends the runtime install command
+    # (`npm install`) after these pre_build_commands itself — declaring
+    # `npm install` here too makes PRE_BUILD run it twice (TASK-1759).
+    # Do not add `npm install` back.
     - aws codeartifact login --tool npm --domain "$CA_DOMAIN" --domain-owner "$CA_DOMAIN_OWNER" --repository "$CA_REPO" --region "$AWS_DEFAULT_REGION"
-    - npm install
   command: npm run build
   post_build_commands:
     - npm publish || echo "Version may already exist; skipping publish."

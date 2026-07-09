@@ -7,7 +7,7 @@
   "CODEARTIFACT_DOMAIN": "my-project",
   "CODEARTIFACT_REPO": "shared",
   "NPM_SCOPE": "@my-project",
-  "NODE_VERSION": "20",
+  "NODE_VERSION": "22",
   "DASHBOARD_AUTH_KEY": "",
   "REPOS": [
     "orchestrator",

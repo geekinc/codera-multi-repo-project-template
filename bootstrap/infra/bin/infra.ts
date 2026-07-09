@@ -8,7 +8,7 @@ const projectName = app.node.tryGetContext("projectName") ?? "myproject";
 const region = app.node.tryGetContext("region") ?? process.env.CDK_DEFAULT_REGION ?? "ca-central-1";
 const caDomain = app.node.tryGetContext("caDomain") ?? projectName;
 const caRepo = app.node.tryGetContext("caRepo") ?? "shared";
-const nodeVersion = app.node.tryGetContext("nodeVersion") ?? "20";
+const nodeVersion = app.node.tryGetContext("nodeVersion") ?? "22";
 const dashboardAuthKey = app.node.tryGetContext("dashboardAuthKey") ?? "";
 
 new PlatformStack(app, `${projectName}-platform`, {
