@@ -233,7 +233,10 @@ aws codeartifact login --tool npm \
 npm install
 ```
 
-The token lasts up to 12 hours; re-run the login when it expires. From here, a
+The login is required: the repos commit no `.npmrc` registry pin, so it is the
+login that points npm (user-level `~/.npmrc`) at the right CodeArtifact
+repository. Use the account (and region) of the environment you are working
+against. The token lasts up to 12 hours; re-run the login when it expires. From here, a
 normal `git push` to any repo triggers its CodeBuild.
 
 ### Working with shared types
@@ -284,6 +287,7 @@ then CodeArtifact repos and domain, then CodeCommit repos, then the
 | Backend build fails on `cdk deploy` | Region not bootstrapped for the backend stack | Bootstrap the region (Step 0) |
 | `npm install` can't find `@scope/shared-types` | `shared-types` hasn't published, or no CodeArtifact login | Run Step 6, then `aws codeartifact login` (Step 7) |
 | Frontend/dashboard build succeeds but deploys nothing | `DEPLOY_BUCKET` env var is empty by default | Set `DEPLOY_BUCKET` (and `CLOUDFRONT_DISTRIBUTION_ID`) as a CodeBuild env override |
+| `npm install` gets E401 from a CodeArtifact host in a different account than the build | A committed `.npmrc` still pins `@scope:registry=` (projects created from template < 1.3.0) | Delete the `@scope:registry=` and `//…:always-auth=true` lines (and the file if nothing else remains); in `shared-types`, remove `publishConfig.registry` |
 | `aws codeartifact login` token rejected | Token expired (12h max) | Re-run the login command |
 | Teardown stalls on stack delete | A retained data store or non-empty S3 bucket is blocking it | Pass `--delete-data`, or clear the resource manually, then re-run |
 
