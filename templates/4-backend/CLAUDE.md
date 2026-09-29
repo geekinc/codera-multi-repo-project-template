@@ -110,4 +110,4 @@ frontends do not read it.
 ## Conventions
 
 - Cross-repo data shapes come from `{{NPM_SCOPE}}/shared-types` — never redefine them here.
-- Authenticate npm to CodeArtifact before installing: `aws codeartifact login --tool npm --domain {{CODEARTIFACT_DOMAIN}} --domain-owner {{AWS_ACCOUNT_ID}} --repository {{CODEARTIFACT_REPO}} --region {{AWS_REGION}}`.
+- Authenticate npm to CodeArtifact before `npm install`: `aws codeartifact login --tool npm --domain {{CODEARTIFACT_DOMAIN}} --domain-owner <account> --repository {{CODEARTIFACT_REPO}} --region <region>`, where `<account>`/`<region>` are those of the environment you are building against (a bound environment uses its own account). The login sets your user-level npm registry and token; there is deliberately no committed `.npmrc` pinning `{{NPM_SCOPE}}` to one account's CodeArtifact host — do not add one, or builds in other accounts fail with E401. Every build already runs the same login first, with the exact coordinates in `$CA_DOMAIN` / `$CA_DOMAIN_OWNER` / `$CA_REPO`.

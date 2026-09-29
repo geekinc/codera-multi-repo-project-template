@@ -35,9 +35,16 @@ subdirectory to its repo.
 ## Shared types via CodeArtifact
 
 `shared-types` publishes `{{NPM_SCOPE}}/shared-types` to CodeArtifact on each
-build. Consumers authenticate at build time with `aws codeartifact login`
-(a 12-hour token — never committed) and resolve the scoped package from their
-`.npmrc`. For local dev, run the same login with your IAM/SSO credentials.
+build. Every build (and every developer, locally) runs
+`aws codeartifact login --tool npm` before `npm install` / `npm publish`. The
+login writes the user-level `~/.npmrc` registry and a 12-hour token for the
+account the build runs in, so the scoped package resolves from that account's
+repository. The repos deliberately commit no `.npmrc` (and `shared-types` no
+`publishConfig.registry`) pinning one account's CodeArtifact host: a pin would
+override the login and send builds in any other account (e.g. a bound Codera
+environment) to the wrong host, failing with E401. For local dev, run the same
+login with your IAM/SSO credentials against the account of the environment you
+work on.
 
 ## Build ordering
 

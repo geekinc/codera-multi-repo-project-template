@@ -5,9 +5,6 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": ["dist"],
-  "publishConfig": {
-    "registry": "https://{{CODEARTIFACT_DOMAIN}}-{{AWS_ACCOUNT_ID}}.d.codeartifact.{{AWS_REGION}}.amazonaws.com/npm/{{CODEARTIFACT_REPO}}/"
-  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "prepublishOnly": "npm run build"
