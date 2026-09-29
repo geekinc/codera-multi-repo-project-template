@@ -30,7 +30,7 @@ display system health. You consume types from `{{NPM_SCOPE}}/shared-types`.
 - Do not modify any file outside this repo
 - Do not define types that belong in `{{NPM_SCOPE}}/shared-types` — if a type is missing, stop and flag it
 - Do not invent API endpoints — if an endpoint is missing, stop and flag it
-- Do not hardcode the API base URL — it comes from `VITE_API_BASE_URL` at build time
+- Do not hardcode the API base URL — it comes from `/config.json` at runtime via `src/lib/config.ts` (see "API base URL" below)
 
 ## Validation
 
@@ -38,7 +38,26 @@ Before pushing:
 ```bash
 npm run build       # tsc + vite build, must exit 0
 npx tsc --noEmit    # must exit 0
+npm test            # node:test (Node >= 22.6), must exit 0
 ```
+
+## API base URL
+
+The app reads the backend URL at runtime, not at build time:
+
+- `src/main.tsx` awaits `loadConfig()` (fetches `/config.json`) before it
+  renders anything that calls the API. Keep that ordering: `apiBaseUrl()` /
+  `getConfig()` throw if called before the config has loaded.
+- On Codera, `/config.json` is written per environment by the platform:
+  `backend.RestApiUrl` is the backend stack's `ApiUrl` output for THAT
+  environment (template `config_from`). One build serves every environment.
+- Local dev (`npm run dev`): `public/config.json` has an empty `backend`, so
+  `apiBaseUrl()` falls back to `VITE_API_BASE_URL` — put
+  `VITE_API_BASE_URL=https://<api-id>.execute-api.<region>.amazonaws.com/prod`
+  in `.env` (git-ignored), or leave it unset to call same-origin relative
+  paths. `VITE_API_BASE_URL` is only a fallback: a non-empty
+  `backend.RestApiUrl` in `/config.json` always wins.
+- Build every request URL as `${apiBaseUrl()}/path` (it has no trailing slash).
 
 ## After Completing a Task
 

@@ -69,12 +69,18 @@ export class BackendStack extends cdk.Stack {
       // Wire Cognito here for the authenticated CRUD surface.
     });
 
-    // Export the API base URL so the frontend/dashboard builds can read it from SSM.
+    // The API base URL in SSM, for scripts and the standalone bootstrap/
+    // pipeline. Codera-hosted frontends do NOT read this (see ApiUrl below).
     new ssm.StringParameter(this, "ApiBaseUrlParam", {
       parameterName: `/${prefix}/api-base-url`,
       stringValue: api.url,
     });
 
+    // LOAD-BEARING NAME: the frontend and dashboard get the API URL from this
+    // output — template.json `config_from: { backend: { ApiUrl: ... } }` copies
+    // it into their /config.json as `backend.RestApiUrl`, per environment.
+    // Renaming it (or nesting it in a construct, which changes its logical id)
+    // silently leaves them without an API URL.
     new cdk.CfnOutput(this, "ApiUrl", { value: api.url });
     new cdk.CfnOutput(this, "QueueUrl", { value: queue.queueUrl });
   }

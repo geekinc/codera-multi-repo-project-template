@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import type { EndpointMetrics } from "{{NPM_SCOPE}}/shared-types";
+import { loadConfig } from "./lib/config";
 import { fetchEndpointMetrics } from "./metrics";
 
 function App() {
@@ -61,8 +62,29 @@ function App() {
   );
 }
 
+// Load /config.json BEFORE rendering anything that calls the API: api calls
+// read the backend URL from it (src/lib/config.ts).
+function ConfigGate() {
+  const [configLoaded, setConfigLoaded] = useState(false);
+  const [configError, setConfigError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadConfig()
+      .then(() => setConfigLoaded(true))
+      .catch((e) => setConfigError(e.message));
+  }, []);
+
+  if (configError) {
+    return <p style={{ fontFamily: "system-ui, sans-serif", padding: "2rem", color: "red" }}>Failed to load config: {configError}</p>;
+  }
+  if (!configLoaded) {
+    return <p style={{ fontFamily: "system-ui, sans-serif", padding: "2rem" }}>Loading...</p>;
+  }
+  return <App />;
+}
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    <ConfigGate />
   </React.StrictMode>,
 );

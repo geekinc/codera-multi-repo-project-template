@@ -17,9 +17,14 @@
 ## Contracts
 
 - All cross-repo data shapes live in `shared-types`. Never duplicate a type.
-- The backend exposes its API base URL via SSM at `/<prefix>/api-base-url`,
-  where `<prefix>` is `{{PROJECT_NAME}}` in the default Codera environment and
-  `{{PROJECT_NAME}}-<env>` in any other (e.g. `/{{PROJECT_NAME}}-production/api-base-url`).
+- The backend exposes its API base URL as the `ApiUrl` output of its stack.
+  Codera copies it into the frontend's and dashboard's `/config.json` as
+  `backend.RestApiUrl` for each environment, and both apps read it at runtime
+  (`src/lib/config.ts`) — nothing is baked in at build time. It is also in SSM
+  at `/<prefix>/api-base-url` (for scripts and the standalone `bootstrap/`
+  pipeline), where `<prefix>` is `{{PROJECT_NAME}}` in the default Codera
+  environment and `{{PROJECT_NAME}}-<env>` in any other (e.g.
+  `/{{PROJECT_NAME}}-production/api-base-url`).
   Every explicitly named backend resource uses that prefix, and the backend's
   one CDK stack is `{{PROJECT_NAME}}-backend` (`{{PROJECT_NAME}}-backend-<env>`
   elsewhere), so environments can share one AWS account; Lambdas receive the
@@ -30,6 +35,9 @@
 
 `shared-types` publishes first. Its successful CodeBuild emits an EventBridge
 event that retriggers frontend, backend, agent, and dashboard builds.
+When Codera creates the project, the frontend and dashboard are created after
+the backend has deployed, so their first `/config.json` already carries its
+`ApiUrl`.
 
 ## Decisions log
 
