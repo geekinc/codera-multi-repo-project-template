@@ -13,5 +13,8 @@ build:
     - aws codeartifact login --tool npm --domain "$CA_DOMAIN" --domain-owner "$CA_DOMAIN_OWNER" --repository "$CA_REPO" --region "$AWS_DEFAULT_REGION"
   command: npm run build
   post_build_commands:
-    - npm publish || echo "Version may already exist; skipping publish."
+    # Publishes, or no-ops only if this exact version is already published
+    # with identical content; any other outcome fails the build (see
+    # scripts/publish.sh). Never add `|| true` / `|| echo` here.
+    - sh scripts/publish.sh
   output: dist

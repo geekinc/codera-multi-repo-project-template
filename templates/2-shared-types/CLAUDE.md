@@ -23,6 +23,7 @@ for modifications or deletions.
 
 - `src/index.ts` — all shared TypeScript interfaces and types
 - `package.json` — version bumps (this triggers CodeArtifact publish via CodeBuild)
+- `scripts/publish.sh` — the CodeBuild publish step (fails loudly; see Publishing)
 - `tsconfig.json` — compiler configuration
 
 ## What You Must NOT Do
@@ -41,9 +42,25 @@ npx tsc --noEmit    # must exit 0
 
 ## Publishing
 
-CodeBuild publishes to CodeArtifact automatically when you push to `main`.
-The version in `package.json` must differ from the published version or the
-publish step is a no-op.
+CodeBuild publishes to CodeArtifact automatically when you push to `main`,
+via `scripts/publish.sh`. **Bump the version in `package.json` on every change
+to what the package ships** (`src/`, `package.json`, `tsconfig.json`):
+CodeArtifact versions are immutable, so a changed package cannot be
+republished under an existing version.
+
+`scripts/publish.sh` enforces this:
+
+- version not yet published → `npm publish`; any publish failure fails the build;
+- version already published with **identical** content (a rebuild of the same
+  commit, or a change that does not alter the packed files) → succeeds as a no-op;
+- version already published with **different** content → the build FAILS with
+  `shared-types <version> ... is already published with different content —
+  bump the version in package.json`;
+- any registry error other than "not found" (expired CodeArtifact login, wrong
+  registry, network) → the build FAILS.
+
+Do not wrap the publish step in `|| true` / `|| echo` — that is how changes
+used to be dropped silently.
 
 ## After Completing a Task
 
