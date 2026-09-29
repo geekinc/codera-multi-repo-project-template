@@ -10,7 +10,7 @@ phases:
   build:
     commands:
       - npm run build
-      - npx cdk deploy --require-approval never
+      - npx cdk deploy "${CODERA_STACK_NAME:-{{PROJECT_NAME}}-backend}" --exclusively --require-approval never
 artifacts:
   base-directory: cdk.out
   files:

@@ -6,6 +6,12 @@ runtime: nodejs22.x
 build:
   output: cdk.out
   cdk_stack_name: "{{PROJECT_NAME}}-backend"
+  # Every named resource in lib/backend-stack.ts is prefixed per environment
+  # ($CODERA_ENV), and bin/backend.ts names the one stack from
+  # $CODERA_STACK_NAME, so environments of this project may share one AWS
+  # account. Keep this true only while that holds — see CLAUDE.md
+  # "Resource naming".
+  env_namespaced: true
   pre_build_commands:
     # Only the CodeArtifact login belongs here. The Codera platform's
     # module-buildspec generator appends the runtime install command
@@ -13,4 +19,9 @@ build:
     # `npm install` here too makes PRE_BUILD run it twice (TASK-1759).
     # Do not add `npm install` back.
     - aws codeartifact login --tool npm --domain "$CA_DOMAIN" --domain-owner "$CA_DOMAIN_OWNER" --repository "$CA_REPO" --region "$AWS_DEFAULT_REGION"
-  command: "npm run build && npx cdk deploy --require-approval never"
+  # The deploy must stay EXACTLY this form: the platform sets
+  # $CODERA_STACK_NAME per environment (default env = cdk_stack_name,
+  # unchanged; others = <cdk_stack_name>-<env>) and, outside the default env,
+  # refuses any other `cdk deploy` (no --all, no --context, no second stack,
+  # and --exclusively is required so no dependency stack deploys).
+  command: 'npm run build && npx cdk deploy "$CODERA_STACK_NAME" --exclusively --require-approval never'
