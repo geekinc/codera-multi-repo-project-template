@@ -132,6 +132,21 @@ test("non-default env never deploys into the default env's stack", () => {
   assert.throws(() => synth({ CODERA_ENV: OTHER_ENV, CODERA_STACK_NAME: DEFAULT_STACK }));
 });
 
+// The frontend and dashboard read the API URL from this output (template.json
+// `config_from: { backend: { ApiUrl: "backend.RestApiUrl" } }`), in every env.
+function assertApiUrlOutput(s: Synth) {
+  const outputs = s.template.findOutputs("ApiUrl");
+  assert.deepEqual(Object.keys(outputs), ["ApiUrl"], "a top-level CloudFormation output named exactly ApiUrl");
+  const restApis = Object.keys(s.template.findResources("AWS::ApiGateway::RestApi"));
+  assert.equal(restApis.length, 1);
+  assert.match(JSON.stringify(outputs.ApiUrl.Value), new RegExp(`"Ref":"${restApis[0]}"`), "ApiUrl is the RestApi's URL");
+}
+
+test("ApiUrl output (consumed by the frontends' config_from) in the default and a non-default env", () => {
+  assertApiUrlOutput(synth({ CODERA_ENV: "default", CODERA_STACK_NAME: DEFAULT_STACK }));
+  assertApiUrlOutput(synth({ CODERA_ENV: OTHER_ENV, CODERA_STACK_NAME: `${DEFAULT_STACK}-${OTHER_ENV}` }));
+});
+
 test("codera-module.yaml runs the one CDK deploy form the platform accepts", () => {
   const yaml = readFileSync(path.join(ROOT, "codera-module.yaml"), "utf8");
   assert.match(yaml, /^ {2}env_namespaced: true$/m);

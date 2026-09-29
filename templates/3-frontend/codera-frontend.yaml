@@ -3,7 +3,9 @@ build:
   command: npm run build
   output: dist
   node_version: "20"
+  # The API URL is NOT baked in at build time: the app reads it at runtime
+  # from /config.json, which Codera writes per environment from the backend
+  # stack's `ApiUrl` output (template.json `config_from`).
   pre_build_commands:
     - aws codeartifact login --tool npm --domain "$CA_DOMAIN" --domain-owner "$CA_DOMAIN_OWNER" --repository "$CA_REPO" --region "$AWS_DEFAULT_REGION"
-    - export VITE_API_BASE_URL=$(aws ssm get-parameter --name "/$PROJECT_NAME/api-base-url" --query "Parameter.Value" --output text 2>/dev/null || echo "")
 routing: spa

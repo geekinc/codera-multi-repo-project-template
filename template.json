@@ -1,6 +1,6 @@
 {
   "name": "CDK-Based mulit-repo project",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Full-stack multi-repo project with orchestrator, shared types, frontend, backend, agent, and dashboard. Includes CodeArtifact package sharing, EventBridge build ordering, and Claude Code agent coordination.",
   "variables": [
     {
@@ -63,7 +63,15 @@
       "type": "frontend",
       "source_path": "templates/3-frontend",
       "auto_build": true,
-      "depends_on": ["shared-types"],
+      "depends_on": ["shared-types", "backend"],
+      "default_config": {
+        "backend": {}
+      },
+      "config_from": {
+        "backend": {
+          "ApiUrl": "backend.RestApiUrl"
+        }
+      },
       "description": "React + Tailwind CRUD app"
     },
     {
@@ -90,7 +98,15 @@
       "type": "frontend",
       "source_path": "templates/6-dashboard",
       "auto_build": true,
-      "depends_on": ["shared-types"],
+      "depends_on": ["shared-types", "backend"],
+      "default_config": {
+        "backend": {}
+      },
+      "config_from": {
+        "backend": {
+          "ApiUrl": "backend.RestApiUrl"
+        }
+      },
       "description": "Monitoring dashboard with Recharts"
     }
   ]

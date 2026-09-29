@@ -12,10 +12,20 @@ phases:
     commands:
       - aws codeartifact login --tool npm --domain "$CA_DOMAIN" --domain-owner "$CA_DOMAIN_OWNER" --repository "$CA_REPO" --region "$AWS_DEFAULT_REGION"
       - npm install
-      - export VITE_API_BASE_URL=$(aws ssm get-parameter --name "/$PROJECT_NAME/api-base-url" --query "Parameter.Value" --output text 2>/dev/null || echo "")
   build:
     commands:
       - npm run build
+      # Standalone (bootstrap/) pipeline only — Codera builds from
+      # codera-frontend.yaml and writes /config.json itself. The app reads the
+      # API URL at runtime from /config.json (src/lib/config.ts), so write the
+      # backend's SSM-published URL into the built config.json.
+      - |
+        API_URL=$(aws ssm get-parameter --name "/$PROJECT_NAME/api-base-url" --query "Parameter.Value" --output text 2>/dev/null || echo "")
+        if [ -n "$API_URL" ]; then
+          node -e 'const fs=require("fs");const f="dist/config.json";const c=JSON.parse(fs.readFileSync(f,"utf8"));c.backend={...(c.backend||{}),RestApiUrl:process.argv[1]};fs.writeFileSync(f,JSON.stringify(c,null,2)+"\n")' "$API_URL"
+        else
+          echo "No /$PROJECT_NAME/api-base-url in SSM — config.json keeps an empty backend URL."
+        fi
   post_build:
     commands:
       - |

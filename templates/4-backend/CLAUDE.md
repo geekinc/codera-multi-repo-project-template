@@ -89,10 +89,16 @@ environment in this account instead of letting the stacks collide.
 ## Deploying
 
 CodeBuild runs `npx cdk deploy "$CODERA_STACK_NAME" --exclusively --require-approval never`
-automatically when you push to `main`. The API base URL is written to SSM at
+automatically when you push to `main`.
+
+The frontend and dashboard get the API URL from this stack's `ApiUrl`
+CloudFormation output: Codera copies it into their `/config.json` as
+`backend.RestApiUrl`, per environment (template `config_from`). Do not rename
+`ApiUrl` or move it into a nested construct (that changes its output name) —
+`npm test` checks it. The URL is also written to SSM at
 `/{{PROJECT_NAME}}/api-base-url` in the default environment
-(`/{{PROJECT_NAME}}-<env>/api-base-url` in others) and consumed by frontend and
-dashboard builds.
+(`/{{PROJECT_NAME}}-<env>/api-base-url` in others) for scripts; Codera-hosted
+frontends do not read it.
 
 ## After Completing a Task
 
