@@ -46,6 +46,20 @@ environment) to the wrong host, failing with E401. For local dev, run the same
 login with your IAM/SSO credentials against the account of the environment you
 work on.
 
+Bump the shared-types `version` in `package.json` on every change to what it
+ships: CodeArtifact versions are immutable. The publish step
+(`templates/2-shared-types/scripts/publish.sh`, called from both `buildspec.yml`
+and `codera-module.yaml`) publishes a new version, succeeds as a no-op when the
+same version is already published with identical content (a rebuild of the
+same commit), and **fails the build** when that version is already published
+with different content, or when the registry query or the publish itself fails
+(auth, wrong registry). Projects instantiated before template 1.4.0 still run
+`npm publish || echo "Version may already exist; skipping publish."`, which
+passes the build on every publish failure and silently drops unbumped changes —
+copy `templates/2-shared-types/scripts/publish.sh` into the shared-types repo
+(as `scripts/publish.sh`) and replace that line with `sh scripts/publish.sh` in
+both `buildspec.yml` and `codera-module.yaml` by hand.
+
 ## Build ordering
 
 A successful `shared-types` build emits a CodeBuild state-change event; an

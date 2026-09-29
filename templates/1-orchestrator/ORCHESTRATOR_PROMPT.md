@@ -161,7 +161,10 @@ Tailor the "Your Specialisation" section to match the agent's domain:
 > **Note:** shared-types has no test suite. Run `npm run build` and
 > `npx tsc --noEmit`; both must succeed. The package publishes to CodeArtifact
 > automatically via CodeBuild when pushed to `main` — do not forget the
-> version bump in `package.json`.
+> version bump in `package.json`: CodeArtifact versions are immutable, so a
+> push that changes the package but keeps the same version cannot be
+> republished — the shared-types build FAILS with "already published with
+> different content — bump the version in package.json" (`scripts/publish.sh`).
 
 **{{PROJECT_NAME}}-backend:**
 > You are the backend API agent. You build and maintain the CDK infrastructure

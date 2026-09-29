@@ -13,8 +13,8 @@ phases:
       - npm run build
   post_build:
     commands:
-      # Publish; if this exact version already exists, npm returns 409 — tolerate it.
-      - PKG=$(node -p "require('./package.json').name")
-      - VER=$(node -p "require('./package.json').version")
-      - echo "Publishing $PKG@$VER"
-      - npm publish || echo "Version may already exist; skipping publish."
+      # Publishes, or no-ops only if this exact version is already published
+      # with identical content. A changed package under an already-published
+      # version, an auth error or a wrong registry FAILS the build — see
+      # scripts/publish.sh. Never add `|| true` / `|| echo` here.
+      - sh scripts/publish.sh
