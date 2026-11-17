@@ -40,7 +40,9 @@ then, the backend synthesizes and deploys exactly as before.
   merge that `bin/backend.ts` still has the `CODERA_PERMISSIONS_BOUNDARY_ARN`
   and `CODERA_CDK_QUALIFIER` block, and that `codera-module.yaml`'s
   `command` still runs `node scripts/codera-toolkit-stack.js` before
-  `npx cdk deploy`.
+  `npx cdk deploy`. If you added lines just before `app.synth()` (tags,
+  aspects), the upgrade pull request shows a conflict there: keep both your
+  lines and the `if (boundaryArn) { ... }` block.
 - **New test** `test/permissions-boundary.test.ts` (`npm test`) synthesizes
   the real app with the variables set, empty and unset. It also runs the real
   build command with stub `npm`/`npx`.
