@@ -3,3 +3,6 @@ node_modules/
 dist/
 cdk.out/
 *.tgz
+
+# Upload zips built by scripts/package-zip.sh
+dist-zip/
