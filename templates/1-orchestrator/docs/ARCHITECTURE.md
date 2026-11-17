@@ -29,6 +29,11 @@
   one CDK stack is `{{PROJECT_NAME}}-backend` (`{{PROJECT_NAME}}-backend-<env>`
   elsewhere), so environments can share one AWS account; Lambdas receive the
   prefix as `RESOURCE_PREFIX`. See the backend's `CLAUDE.md` → "Resource naming".
+- Every IAM role in the backend's CDK app carries the Codera permissions
+  boundary (`PermissionsBoundary.of(app)`) and the stack deploys through the
+  Codera CDK bootstrap (qualifier `codera`) once Codera sets
+  `CODERA_PERMISSIONS_BOUNDARY_ARN` / `CODERA_CDK_QUALIFIER` (after the AWS
+  link is upgraded). See the backend's `CLAUDE.md` → "Permissions boundary".
 - The agent and frontend both consume the API; both depend on `shared-types`.
 
 ## Build ordering

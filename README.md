@@ -60,6 +60,20 @@ copy `templates/2-shared-types/scripts/publish.sh` into the shared-types repo
 (as `scripts/publish.sh`) and replace that line with `sh scripts/publish.sh` in
 both `buildspec.yml` and `codera-module.yaml` by hand.
 
+## Backend: Codera permissions boundary
+
+When Codera upgrades a project's AWS link, it sets
+`CODERA_PERMISSIONS_BOUNDARY_ARN` and `CODERA_CDK_QUALIFIER=codera` on the
+backend build. `templates/4-backend/bin/backend.ts` then puts the boundary on
+every IAM role in the CDK app (`PermissionsBoundary.of(app)`) and synthesizes
+with the `codera` qualifier. The build runs
+`templates/4-backend/scripts/codera-toolkit-stack.js` right before the deploy,
+and the script points the CDK CLI at the `CDKToolkit-Codera` toolkit stack via
+`cdk.json`. The deploy command itself stays the one literal form Codera accepts
+outside the default environment. With neither variable set (every build before
+the link upgrade, the standalone `bootstrap/` pipeline, local runs), the
+synthesized template is byte-identical to before.
+
 ## Build ordering
 
 A successful `shared-types` build emits a CodeBuild state-change event; an
@@ -93,6 +107,40 @@ only deleted with `--delete-data`), then the CodeArtifact repos + domain, then
 the CodeCommit repos, then the `<project>-platform` stack, then the leftover SSM
 parameter. If a delete stalls, it's almost always a retained data store or a
 non-empty S3 deploy bucket you created separately — clear it and re-run.
+
+## Release and packaging
+
+`template.json` `version` is the release; any content change bumps it, and
+each release gets a `CHANGELOG.md` section. To build the Codera upload zip:
+
+```bash
+scripts/package-zip.sh
+# → dist-zip/codera-multi-repo-project-template-<version>.zip
+```
+
+The zip is `git archive HEAD`: only committed files, with `template.json` at
+the root. The script lists the contents and refuses (deleting the zip) if
+any build output (`node_modules`, `dist`, `cdk.out`, `.aws-sam`, `.git`,
+`*.tsbuildinfo`) got in, or if a repository's `source_path`, an auto-built
+module's `codera-module.yaml` or a frontend's `codera-frontend.yaml` is
+missing (the `agent` module is `auto_build: false` and has none). Before a
+release, also parse `template.json` with the platform schema
+(`saas-backend/src/lib/template-manifest-schema.ts`) and the substituted
+`codera-module.yaml` with `saas-backend/src/services/manifest-parser.ts` plus
+`qualifyBuildForEnvironment` (`module-env-naming.ts`) for a non-default
+environment: unknown keys are dropped silently, an invalid module manifest is
+rejected silently, and a CDK deploy form the platform does not accept only
+fails in non-default environments.
+
+## Template upgrades (opt-in since 1.5.0)
+
+`template.json` declares `upgrades: { enabled: true, managed_paths:
+["sync-check.sh", "git-hooks/**"] }` (ARCHITECTURE §31.14 in saas-docs).
+Codera offers existing projects a newer published version as one pull
+request per repo. Every file is three-way merged except the managed paths,
+which are overwritten when a release changes them. Both globs match only in
+the orchestrator repo. Only zip-uploaded versions take part: a project
+upgrades only if Codera holds its base version as a zip.
 
 ## Notes / things to scope down before production
 

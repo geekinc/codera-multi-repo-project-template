@@ -134,9 +134,14 @@ grep -r "Status.*Complete" tasks/active/
     completed/           <- archived completed tasks
     TASK_TEMPLATE.md     <- format for new tasks
   sync-archive/          <- archived SYNC.md entries by month
-  git-hooks/             <- pre-push hook for sub-agent repos
-  sync-check.sh          <- sync utility
+  git-hooks/             <- pre-push hook for sub-agent repos (template-managed)
+  sync-check.sh          <- sync utility (template-managed)
 ```
+
+`sync-check.sh` and `git-hooks/**` are **template-managed**. When a Codera
+template upgrade changes one of them, the upgrade pull request replaces the
+file instead of merging it, so local edits to it are lost. Every other file is
+three-way merged.
 
 ## Conventions
 - Cross-repo data shapes come from `{{NPM_SCOPE}}/shared-types` — never redefine them here.

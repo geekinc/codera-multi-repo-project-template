@@ -24,4 +24,9 @@ build:
   # unchanged; others = <cdk_stack_name>-<env>) and, outside the default env,
   # refuses any other `cdk deploy` (no --all, no --context, no second stack,
   # and --exclusively is required so no dependency stack deploys).
-  command: 'npm run build && npx cdk deploy "$CODERA_STACK_NAME" --exclusively --require-approval never'
+  # scripts/codera-toolkit-stack.js does nothing unless the platform sets
+  # $CODERA_CDK_QUALIFIER (SEC-049: your AWS link was upgraded); then it sets
+  # cdk.json "toolkitStackName" to the Codera bootstrap's CDKToolkit-Codera,
+  # the same as `--toolkit-stack-name CDKToolkit-Codera` (a conditional flag
+  # would break the one-deploy rule above). Keep it right before the deploy.
+  command: 'npm run build && node scripts/codera-toolkit-stack.js && npx cdk deploy "$CODERA_STACK_NAME" --exclusively --require-approval never'

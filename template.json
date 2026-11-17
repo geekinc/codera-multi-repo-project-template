@@ -1,6 +1,6 @@
 {
   "name": "CDK-Based mulit-repo project",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Full-stack multi-repo project with orchestrator, shared types, frontend, backend, agent, and dashboard. Includes CodeArtifact package sharing, EventBridge build ordering, and Claude Code agent coordination.",
   "variables": [
     {
@@ -109,5 +109,9 @@
       },
       "description": "Monitoring dashboard with Recharts"
     }
-  ]
+  ],
+  "upgrades": {
+    "enabled": true,
+    "managed_paths": ["sync-check.sh", "git-hooks/**"]
+  }
 }

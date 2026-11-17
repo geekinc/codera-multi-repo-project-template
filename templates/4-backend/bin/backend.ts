@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import * as cdk from "aws-cdk-lib";
+import { ManagedPolicy, PermissionsBoundary } from "aws-cdk-lib/aws-iam";
 import { BackendStack, DEFAULT_ENV } from "../lib/backend-stack";
 
 // Codera sets both on every module build (see codera-module.yaml):
@@ -25,10 +26,32 @@ if (environmentName !== DEFAULT_ENV && stackName === defaultStackName) {
   throw new Error(`CODERA_ENV=${environmentName} but the stack name is the default env's "${defaultStackName}".`);
 }
 
+// Codera permissions boundary + CDK qualifier (SEC-049). The platform sets
+// these on a module build only once this project's AWS link is upgraded;
+// until then both are UNSET and the synthesized template is exactly what it
+// was without this block. Unset and empty mean the same: off.
+//   CODERA_PERMISSIONS_BOUNDARY_ARN — every IAM role (and user) the app
+//     synthesizes must carry this managed policy as its permissions boundary,
+//     or the deploy is refused once the link is enforced.
+//   CODERA_CDK_QUALIFIER ("codera") — deploy through the Codera CDK bootstrap
+//     (toolkit stack CDKToolkit-Codera, roles cdk-codera-*), the only CDK
+//     roles an enforced build may assume. codera-module.yaml points the CLI
+//     at that toolkit stack (scripts/codera-toolkit-stack.js).
+const boundaryArn = process.env.CODERA_PERMISSIONS_BOUNDARY_ARN || undefined;
+const cdkQualifier = process.env.CODERA_CDK_QUALIFIER || undefined;
+
 const app = new cdk.App();
-new BackendStack(app, stackName, {
+const stack = new BackendStack(app, stackName, {
   stackName,
   environmentName,
   env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+  // Any stack you add to this app needs the same synthesizer.
+  ...(cdkQualifier && { synthesizer: new cdk.DefaultStackSynthesizer({ qualifier: cdkQualifier }) }),
 });
+if (boundaryArn) {
+  // Applied to the APP, so it covers every role in every stack, including
+  // roles CDK generates for you (Lambda service roles, the API Gateway
+  // CloudWatch role, custom-resource providers such as log retention).
+  PermissionsBoundary.of(app).apply(ManagedPolicy.fromManagedPolicyArn(stack, "CoderaPermissionsBoundary", boundaryArn));
+}
 app.synth();

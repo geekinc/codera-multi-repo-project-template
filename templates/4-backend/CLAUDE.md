@@ -60,7 +60,9 @@ promise holds only while these rules do:
   `npx cdk deploy "$CODERA_STACK_NAME" --exclusively --require-approval never`.
   Outside the default env the platform refuses anything else (`--all`,
   `--context`, a second stack, a missing `--exclusively`, `cdk bootstrap` /
-  `destroy`, a second deploy).
+  `destroy`, a second deploy, a flag whose value is not a literal such as
+  `${VAR:+--flag}`). `node scripts/codera-toolkit-stack.js` runs right
+  before it (see "Permissions boundary" below).
 - **Every explicitly named resource** (any `*Name` physical-name property:
   `restApiName`, SSM `parameterName`, `tableName`, `queueName`,
   `functionName`, `roleName`, log groups, alarms, topics, rules, …) is built
@@ -85,6 +87,33 @@ promise holds only while these rules do:
 If you add a named resource that cannot follow the prefix rule, set
 `env_namespaced` to `false` — the platform then refuses to put a second
 environment in this account instead of letting the stacks collide.
+
+## Permissions boundary and CDK qualifier (Codera AWS link)
+
+Once this project's AWS link is upgraded, Codera sets two variables on every
+module build (both are unset before that, and the app then behaves exactly as
+if this support did not exist):
+
+- `CODERA_PERMISSIONS_BOUNDARY_ARN` — `bin/backend.ts` applies it with
+  `PermissionsBoundary.of(app)`, so **every** IAM role in the app carries it,
+  including roles CDK generates (Lambda service roles, the API Gateway
+  CloudWatch role, custom-resource providers such as log retention). An
+  upgraded link refuses to create a role without it, so never add a role
+  outside this app's aspect (e.g. a raw CloudFormation template deployed by a
+  script) and never call `PermissionsBoundary.of(...).clear()`.
+- `CODERA_CDK_QUALIFIER` (`codera`) — `BackendStack` synthesizes with
+  `new DefaultStackSynthesizer({ qualifier })`, so it deploys through the
+  Codera bootstrap (roles `cdk-codera-*`, the only CDK roles an upgraded link
+  lets the build assume). `scripts/codera-toolkit-stack.js` then sets
+  `"toolkitStackName": "CDKToolkit-Codera"` in `cdk.json` (equivalent to
+  `--toolkit-stack-name CDKToolkit-Codera`; the flag cannot go on the deploy
+  because of the one-literal-deploy rule above). Do not commit that
+  `cdk.json` change; the script only makes it inside the build. Do not set a
+  `synthesizer` of your own on `BackendStack`.
+
+`npm test` (`test/permissions-boundary.test.ts`) checks both, with the
+variables set, empty and unset, and runs the real `build.command` with stub
+`npm`/`npx`.
 
 ## Deploying
 
