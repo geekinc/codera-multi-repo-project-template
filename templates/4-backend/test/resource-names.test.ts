@@ -55,7 +55,9 @@ function synth(vars: Record<string, string>): Synth {
   const outdir = mkdtempSync(path.join(tmpdir(), "backend-synth-"));
   try {
     const env: NodeJS.ProcessEnv = { ...process.env, ...vars, CDK_OUTDIR: outdir, TS_NODE_TRANSPILE_ONLY: "true" };
-    for (const k of ["CODERA_ENV", "CODERA_STACK_NAME"]) if (!(k in vars)) delete env[k];
+    for (const k of ["CODERA_ENV", "CODERA_STACK_NAME", "CODERA_PERMISSIONS_BOUNDARY_ARN", "CODERA_CDK_QUALIFIER"]) {
+      if (!(k in vars)) delete env[k];
+    }
     execFileSync(process.execPath, ["--require", "ts-node/register", path.join(ROOT, "bin/backend.ts")], {
       cwd: ROOT,
       env,
@@ -153,6 +155,6 @@ test("codera-module.yaml runs the one CDK deploy form the platform accepts", () 
   assert.match(yaml, new RegExp(`^ {2}cdk_stack_name: "${DEFAULT_STACK}"$`, "m"));
   const commands = yaml.match(/^ {2}command: .*$/gm) ?? [];
   assert.deepEqual(commands, [
-    `  command: 'npm run build && npx cdk deploy "$CODERA_STACK_NAME" --exclusively --require-approval never'`,
+    `  command: 'npm run build && node scripts/codera-toolkit-stack.js && npx cdk deploy "$CODERA_STACK_NAME" --exclusively --require-approval never'`,
   ]);
 });
